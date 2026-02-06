@@ -46,6 +46,14 @@ struct LivingGridBackground: View {
 
     // MARK: - Grid Drawing
 
+    /// Shared drawing parameters computed once per frame
+    private struct DrawParams {
+        let size: CGSize
+        let jitter: CGFloat
+        let effectiveGlow: Double
+        let flickerMultiplier: Double
+    }
+
     private func drawGrid(
         context: GraphicsContext,
         size: CGSize,
@@ -55,55 +63,72 @@ struct LivingGridBackground: View {
         let horizon = vanishingPoint.y
         let gridHeight = size.height - horizon + 50
 
-        // Glow pulse: smooth sine wave
         let period = state.animationPeriod
         let glowAmount = 0.3 + 0.5 * (0.5 + 0.5 * sin(time * .pi * 2.0 / period))
 
-        // Scroll: continuous forward motion
-        // scrollSpeed of 1.0 = one line spacing per second
         let lineSpacing = 1.0 / Double(horizontalLineCount)
         let scrollOffset = (time * state.scrollSpeed * 0.15).truncatingRemainder(dividingBy: 1.0)
 
-        // Jitter for high-intensity states
-        let jitter: CGFloat = state.hasJitter ? CGFloat.random(in: -2...2) : 0
-
-        // Apply flash effect for win state
         var effectiveGlow = glowAmount
         if flashIntensity > 0 {
             effectiveGlow = min(1.0, glowAmount + flashIntensity)
         }
 
-        // Apply flicker for loss state
         let flickerMultiplier = if case .loss = state {
             0.5 + 0.5 * sin(time * 15)
         } else {
             1.0
         }
 
-        // Draw horizontal lines with perspective
+        let params = DrawParams(
+            size: size,
+            jitter: state.hasJitter ? CGFloat.random(in: -2...2) : 0,
+            effectiveGlow: effectiveGlow,
+            flickerMultiplier: flickerMultiplier
+        )
+
+        drawHorizontalLines(
+            context: context,
+            params: params,
+            horizon: horizon,
+            gridHeight: gridHeight,
+            lineSpacing: lineSpacing,
+            scrollOffset: scrollOffset
+        )
+
+        drawVerticalLines(
+            context: context,
+            params: params,
+            vanishingPoint: vanishingPoint
+        )
+
+        drawRipple(context: context, size: size)
+    }
+
+    private func drawHorizontalLines(
+        context: GraphicsContext,
+        params: DrawParams,
+        horizon: CGFloat,
+        gridHeight: CGFloat,
+        lineSpacing: Double,
+        scrollOffset: Double
+    ) {
         for i in 0..<horizontalLineCount {
-            // Base position (0 to 1)
             var pos = Double(i) * lineSpacing + scrollOffset
             if pos >= 1.0 { pos -= 1.0 }
 
-            // Perspective: lines near horizon are compressed
             let perspectivePos = pow(pos, 1.8)
-
-            // Screen Y coordinate
             let y = horizon + gridHeight * perspectivePos
+            let lineOpacity = params.effectiveGlow * perspectivePos * params.flickerMultiplier
 
-            // Opacity based on distance (closer = brighter)
-            let lineOpacity = effectiveGlow * perspectivePos * flickerMultiplier
-
-            // Fragment effect for loss state
             var lineJitter: CGFloat = 0
             if case .loss = state, i < fragmentOffset.count {
                 lineJitter = fragmentOffset[i]
             }
 
             var path = Path()
-            path.move(to: CGPoint(x: -50 + lineJitter + jitter, y: y))
-            path.addLine(to: CGPoint(x: size.width + 50 + lineJitter + jitter, y: y))
+            path.move(to: CGPoint(x: -50 + lineJitter + params.jitter, y: y))
+            path.addLine(to: CGPoint(x: params.size.width + 50 + lineJitter + params.jitter, y: y))
 
             context.stroke(
                 path,
@@ -111,40 +136,51 @@ struct LivingGridBackground: View {
                 lineWidth: max(0.5, 1.5 * perspectivePos)
             )
         }
+    }
 
-        // Draw vertical lines converging to vanishing point
-        let groundWidth = size.width * 1.5
-        let startX = (size.width - groundWidth) / 2 // Center the spread
+    private func drawVerticalLines(
+        context: GraphicsContext,
+        params: DrawParams,
+        vanishingPoint: CGPoint
+    ) {
+        let groundWidth = params.size.width * 1.5
+        let startX = (params.size.width - groundWidth) / 2
 
         for i in 0..<verticalLineCount {
             let normalizedIndex = Double(i) / Double(verticalLineCount - 1)
             let bottomX = startX + groundWidth * normalizedIndex
 
             let distanceFromCenter = abs(normalizedIndex - 0.5) * 2
-            let lineOpacity = effectiveGlow * (1.0 - distanceFromCenter * 0.3) * flickerMultiplier
+            let lineOpacity = params.effectiveGlow * (1.0 - distanceFromCenter * 0.3) * params.flickerMultiplier
 
             var path = Path()
             path.move(to: vanishingPoint)
-            path.addLine(to: CGPoint(x: bottomX + jitter, y: size.height + 50))
+            path.addLine(to: CGPoint(x: bottomX + params.jitter, y: params.size.height + 50))
 
             context.stroke(
                 path,
-                with: .color(currentPalette.accent.opacity(lineOpacity * 0.6 * currentPalette.accentOpacity)),
+                with: .color(
+                    currentPalette.accent.opacity(lineOpacity * 0.6 * currentPalette.accentOpacity)
+                ),
                 lineWidth: 0.8
             )
         }
+    }
 
-        // Ripple effect for win state
-        if rippleRadius > 0 {
-            let ripplePath = Path(ellipseIn: CGRect(
-                x: size.width / 2 - rippleRadius,
-                y: size.height / 2 - rippleRadius,
-                width: rippleRadius * 2,
-                height: rippleRadius * 2
-            ))
-            let rippleOpacity = max(0, 1.0 - rippleRadius / max(size.width, size.height))
-            context.stroke(ripplePath, with: .color(currentPalette.accent.opacity(rippleOpacity)), lineWidth: 3)
-        }
+    private func drawRipple(context: GraphicsContext, size: CGSize) {
+        guard rippleRadius > 0 else { return }
+        let ripplePath = Path(ellipseIn: CGRect(
+            x: size.width / 2 - rippleRadius,
+            y: size.height / 2 - rippleRadius,
+            width: rippleRadius * 2,
+            height: rippleRadius * 2
+        ))
+        let rippleOpacity = max(0, 1.0 - rippleRadius / max(size.width, size.height))
+        context.stroke(
+            ripplePath,
+            with: .color(currentPalette.accent.opacity(rippleOpacity)),
+            lineWidth: 3
+        )
     }
 
     // MARK: - Win Effect
