@@ -2,8 +2,8 @@ name: Breach
 options:
   bundleIdPrefix: com.artshin
   deploymentTarget:
-    iOS: "16.0"
-  xcodeVersion: "15.0"
+    iOS: "26.0"
+  xcodeVersion: "26.0"
 
 targets:
   Breach:

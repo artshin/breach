@@ -60,7 +60,7 @@ struct GameOverView: View {
                 // Subtitle
                 Text(subtitleText)
                     .font(.system(size: 14, design: .monospaced))
-                    .foregroundColor(.gray)
+                    .foregroundColor(BreachColors.textSecondary)
                     .multilineTextAlignment(.center)
 
                 // Stats
@@ -69,40 +69,43 @@ struct GameOverView: View {
                     HStack {
                         Text("SEQUENCES")
                             .font(.system(size: 12, weight: .bold, design: .monospaced))
-                            .foregroundColor(.cyan.opacity(0.7))
+                            .foregroundColor(BreachColors.accent.opacity(0.7))
                         Spacer()
                         Text("\(resultData.completed)/\(resultData.total)")
                             .font(.system(size: 14, weight: .bold, design: .monospaced))
-                            .foregroundColor(hasAnySuccess ? .green : .red)
+                            .foregroundColor(hasAnySuccess ? BreachColors.success : BreachColors.danger)
                     }
 
                     // Moves vs Par
                     HStack {
                         Text("MOVES")
                             .font(.system(size: 12, weight: .bold, design: .monospaced))
-                            .foregroundColor(.cyan.opacity(0.7))
+                            .foregroundColor(BreachColors.accent.opacity(0.7))
                         Spacer()
                         HStack(spacing: 4) {
                             Text("\(resultData.moves)")
                                 .font(.system(size: 14, weight: .bold, design: .monospaced))
-                                .foregroundColor(resultData.moves <= resultData.par ? .green : .yellow)
+                                .foregroundColor(
+                                    resultData.moves <= resultData.par ? BreachColors.success : BreachColors.warning
+                                )
                             Text("/")
                                 .font(.system(size: 14, design: .monospaced))
-                                .foregroundColor(.gray)
+                                .foregroundColor(BreachColors.textSecondary)
                             Text("\(resultData.par)")
                                 .font(.system(size: 14, design: .monospaced))
-                                .foregroundColor(.cyan.opacity(0.7))
+                                .foregroundColor(BreachColors.accent.opacity(0.7))
                             Text("PAR")
                                 .font(.system(size: 10, design: .monospaced))
-                                .foregroundColor(.gray)
+                                .foregroundColor(BreachColors.textSecondary)
                         }
                     }
                 }
                 .padding(16)
                 .background(
-                    RoundedRectangle(cornerRadius: 4)
-                        .stroke(Color.cyan.opacity(0.3), lineWidth: 1)
+                    Rectangle()
+                        .stroke(BreachColors.borderSecondary, lineWidth: 1)
                 )
+                .breachBevel()
                 .padding(.horizontal, 20)
 
                 // Action Buttons
@@ -111,19 +114,23 @@ struct GameOverView: View {
                         Text("PLAY AGAIN")
                             .font(BreachTypography.body(16))
                             .fontWeight(.bold)
-                            .foregroundColor(.black)
+                            .foregroundColor(buttonColor)
                             .padding(.horizontal, BreachSpacing.xxl)
                             .padding(.vertical, BreachSpacing.md)
                             .frame(minWidth: 160)
-                            .background(buttonColor)
-                            .cornerRadius(BreachRadius.sm)
+                            .breachGlass(tint: buttonColor)
+                            .overlay(
+                                Rectangle()
+                                    .stroke(buttonColor, lineWidth: 1)
+                            )
+                            .breachBevel(color: buttonColor)
                     }
 
                     if let onHome {
                         Button(action: onHome) {
                             Text("HOME")
                                 .font(BreachTypography.caption())
-                                .foregroundColor(BreachColors.cyan)
+                                .foregroundColor(BreachColors.accent)
                                 .padding(.horizontal, BreachSpacing.lg)
                                 .padding(.vertical, BreachSpacing.sm)
                         }
@@ -159,10 +166,10 @@ struct GameOverView: View {
 
     private var titleColor: Color {
         switch stars {
-        case 3: .yellow
-        case 2: .green
-        case 1: .orange
-        default: .red
+        case 3: BreachColors.resultOptimal
+        case 2: BreachColors.resultGood
+        case 1: BreachColors.resultPartial
+        default: BreachColors.resultFailed
         }
     }
 
@@ -177,10 +184,10 @@ struct GameOverView: View {
 
     private var buttonColor: Color {
         switch stars {
-        case 3: .yellow
-        case 2: .green
-        case 1: .orange
-        default: .cyan
+        case 3: BreachColors.resultOptimal
+        case 2: BreachColors.resultGood
+        case 1: BreachColors.resultPartial
+        default: BreachColors.accent
         }
     }
 }
@@ -193,7 +200,7 @@ struct StarsView: View {
             ForEach(0..<3, id: \.self) { index in
                 Image(systemName: index < count ? "star.fill" : "star")
                     .font(.system(size: 32))
-                    .foregroundColor(index < count ? .yellow : .gray.opacity(0.3))
+                    .foregroundColor(index < count ? BreachColors.starFilled : BreachColors.starEmpty)
             }
         }
     }
@@ -211,10 +218,10 @@ struct AnimatedStarsView: View {
             ForEach(0..<3, id: \.self) { index in
                 Image(systemName: index < count ? "star.fill" : "star")
                     .font(.system(size: 36))
-                    .foregroundColor(index < count ? .yellow : .gray.opacity(0.3))
+                    .foregroundColor(index < count ? BreachColors.starFilled : BreachColors.starEmpty)
                     .scaleEffect(starScales[index])
                     .rotationEffect(.degrees(starRotations[index]))
-                    .shadow(color: index < count ? .yellow.opacity(0.5) : .clear, radius: 8)
+                    .shadow(color: index < count ? BreachColors.starFilled.opacity(0.5) : .clear, radius: 8)
             }
         }
         .onChange(of: animate) { shouldAnimate in

@@ -4,6 +4,7 @@ struct GameView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
     @Environment(\.verticalSizeClass) var verticalSizeClass
+    @EnvironmentObject private var backgroundState: BackgroundStateManager
     @StateObject private var viewModel: GameViewModel
 
     init(difficulty: Difficulty) {
@@ -15,27 +16,18 @@ struct GameView: View {
         horizontalSizeClass == .regular
     }
 
-    /// Computed background state based on game result
-    private var backgroundState: BackgroundGameState {
+    private func syncBackground() {
         switch viewModel.gameResult {
         case .playing:
-            let bufferFillRatio = Double(viewModel.buffer.count) / Double(viewModel.bufferSize)
-            return .game(bufferFillRatio: bufferFillRatio)
+            let ratio = Double(viewModel.buffer.count) / Double(viewModel.bufferSize)
+            backgroundState.state = .game(bufferFillRatio: ratio)
         case .finished:
-            if viewModel.gameResult.stars > 0 {
-                return .win
-            } else {
-                return .loss
-            }
+            backgroundState.state = viewModel.gameResult.stars > 0 ? .win : .loss
         }
     }
 
     var body: some View {
         ZStack {
-            // Animated background
-            BackgroundView(state: backgroundState)
-                .ignoresSafeArea()
-
             if useWideLayout {
                 wideLayout
             } else {
@@ -53,6 +45,10 @@ struct GameView: View {
         }
         .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .navigationBar)
+        .clearNavigationBackground()
+        .onAppear { syncBackground() }
+        .onChange(of: viewModel.buffer.count) { _ in syncBackground() }
+        .onChange(of: viewModel.gameResult) { _ in syncBackground() }
     }
 
     // MARK: - Compact Layout (iPhone Portrait)
@@ -126,7 +122,7 @@ struct GameView: View {
                     Text("EXIT")
                         .font(BreachTypography.caption())
                 }
-                .foregroundColor(BreachColors.cyan)
+                .foregroundColor(BreachColors.accent)
             }
 
             Spacer()
@@ -134,7 +130,7 @@ struct GameView: View {
             // Title
             Text("BREACH PROTOCOL")
                 .font(BreachTypography.heading(16))
-                .foregroundColor(BreachColors.cyan)
+                .foregroundColor(BreachColors.accent)
 
             Spacer()
 
@@ -155,12 +151,12 @@ struct GameView: View {
                     .foregroundColor(BreachColors.textMuted)
                 Text("\(viewModel.moveCount)")
                     .font(BreachTypography.body(14))
-                    .foregroundColor(viewModel.moveCount <= viewModel.par ? BreachColors.green : BreachColors.yellow)
+                    .foregroundColor(viewModel.moveCount <= viewModel.par ? BreachColors.success : BreachColors.warning)
                 Text("/")
                     .foregroundColor(BreachColors.textMuted)
                 Text("\(viewModel.par)")
                     .font(BreachTypography.caption(12))
-                    .foregroundColor(BreachColors.cyan.opacity(0.7))
+                    .foregroundColor(BreachColors.accent.opacity(0.7))
                 Text("PAR")
                     .font(BreachTypography.caption(10))
                     .foregroundColor(BreachColors.textMuted)
@@ -169,7 +165,7 @@ struct GameView: View {
             Spacer()
 
             // Restart Button
-            BreachOutlineButton("RESTART", color: BreachColors.cyan) {
+            BreachOutlineButton("RESTART", color: BreachColors.accent) {
                 viewModel.newGame()
             }
         }
@@ -184,10 +180,10 @@ struct DifficultyBadge: View {
 
     private var badgeColor: Color {
         switch difficulty {
-        case .easy: BreachColors.green
-        case .medium: BreachColors.yellow
-        case .hard: BreachColors.orange
-        case .expert: BreachColors.red
+        case .easy: BreachColors.tierEasy
+        case .medium: BreachColors.tierMedium
+        case .hard: BreachColors.tierHard
+        case .expert: BreachColors.tierExpert
         }
     }
 
@@ -199,15 +195,18 @@ struct DifficultyBadge: View {
             .padding(.vertical, BreachSpacing.xs)
             .background(badgeColor.opacity(0.15))
             .overlay(
-                RoundedRectangle(cornerRadius: BreachRadius.sm)
+                Rectangle()
                     .stroke(badgeColor.opacity(0.5), lineWidth: 1)
             )
-            .cornerRadius(BreachRadius.sm)
     }
 }
 
 #Preview {
-    NavigationStack {
-        GameView(difficulty: .easy)
+    ZStack {
+        BackgroundView(state: .game(bufferFillRatio: 0)).ignoresSafeArea()
+        NavigationStack {
+            GameView(difficulty: .easy)
+        }
     }
+    .environmentObject(BackgroundStateManager())
 }

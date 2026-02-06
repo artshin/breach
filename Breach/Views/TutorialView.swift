@@ -19,43 +19,43 @@ struct TutorialView: View {
             title: "WELCOME, NETRUNNER",
             description: "Breach Protocol is a hacking minigame. Your goal is to complete sequences by selecting codes from the matrix.",
             icon: "terminal",
-            highlightColor: BreachColors.cyan
+            highlightColor: BreachColors.accent
         ),
         TutorialStep(
             title: "THE MATRIX",
             description: "The matrix contains hex codes. You must select codes in a specific pattern to breach the system.",
             icon: "square.grid.3x3",
-            highlightColor: BreachColors.cyan
+            highlightColor: BreachColors.accent
         ),
         TutorialStep(
             title: "ROW & COLUMN RULES",
             description: "You alternate between selecting from rows and columns. Start by picking from the top row, then pick from that column, and so on.",
             icon: "arrow.left.and.right",
-            highlightColor: BreachColors.yellow
+            highlightColor: BreachColors.accentHighlight
         ),
         TutorialStep(
             title: "THE BUFFER",
             description: "Each code you select goes into your buffer. The buffer has limited space - plan your moves carefully!",
             icon: "tray",
-            highlightColor: BreachColors.yellow
+            highlightColor: BreachColors.accentHighlight
         ),
         TutorialStep(
             title: "TARGET SEQUENCES",
             description: "Complete sequences by selecting their codes in order. Codes don't need to be consecutive - just in the right order.",
             icon: "list.number",
-            highlightColor: BreachColors.pink
+            highlightColor: BreachColors.accentSecondary
         ),
         TutorialStep(
             title: "EARN STARS",
             description: "⭐ 1 star: Complete at least one sequence\n⭐⭐ 2 stars: Complete all sequences\n⭐⭐⭐ 3 stars: Complete all at or under par",
             icon: "star.fill",
-            highlightColor: BreachColors.yellow
+            highlightColor: BreachColors.accentHighlight
         ),
         TutorialStep(
             title: "READY TO BREACH",
-            description: "Highlighted cells show valid moves. Yellow borders indicate codes that advance a sequence. Good luck, netrunner!",
+            description: "Highlighted cells show valid moves. Gold borders indicate codes that advance a sequence. Good luck, netrunner!",
             icon: "bolt.fill",
-            highlightColor: BreachColors.green
+            highlightColor: BreachColors.success
         )
     ]
     // swiftlint:enable line_length
@@ -136,7 +136,7 @@ struct TutorialView: View {
                     }
                 }
             } else {
-                BreachButton("START PLAYING", color: BreachColors.green) {
+                BreachButton("START PLAYING", color: BreachColors.success) {
                     TutorialManager.shared.markTutorialComplete()
                     onComplete()
                     dismiss()

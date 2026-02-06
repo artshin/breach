@@ -48,6 +48,9 @@ playground.xcworkspace
 # Archives
 *.xcarchive
 
+# Environment
+.env
+
 # Temporary files
 *.tmp
 *.temp

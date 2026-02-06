@@ -4,6 +4,7 @@ struct GridRushView: View {
     @StateObject private var viewModel = GridRushViewModel()
     @Environment(\.dismiss) private var dismiss
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
+    @EnvironmentObject private var backgroundState: BackgroundStateManager
 
     private var isWideLayout: Bool {
         horizontalSizeClass == .regular
@@ -14,12 +15,13 @@ struct GridRushView: View {
         return Double(viewModel.buffer.count) / Double(viewModel.bufferSize)
     }
 
+    private func syncBackground() {
+        let ratio = Double(viewModel.buffer.count) / Double(max(1, viewModel.bufferSize))
+        backgroundState.state = .game(bufferFillRatio: ratio)
+    }
+
     var body: some View {
         ZStack {
-            // Background
-            BackgroundView(state: .game(bufferFillRatio: bufferFillRatio))
-                .ignoresSafeArea()
-
             if viewModel.gameState != nil {
                 // Main game content
                 VStack(spacing: BreachSpacing.md) {
@@ -84,7 +86,7 @@ struct GridRushView: View {
             } else {
                 // Loading state
                 ProgressView()
-                    .tint(BreachColors.cyan)
+                    .tint(BreachColors.accent)
             }
 
             // Game Over overlay
@@ -102,6 +104,7 @@ struct GridRushView: View {
             }
         }
         .navigationBarBackButtonHidden(true)
+        .clearNavigationBackground()
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button {
@@ -113,7 +116,7 @@ struct GridRushView: View {
                         Text("EXIT")
                     }
                     .font(BreachTypography.caption())
-                    .foregroundColor(BreachColors.cyan)
+                    .foregroundColor(BreachColors.accent)
                 }
             }
 
@@ -127,13 +130,15 @@ struct GridRushView: View {
                 } label: {
                     Image(systemName: viewModel.isPaused ? "play.fill" : "pause.fill")
                         .font(.system(size: 16))
-                        .foregroundColor(BreachColors.cyan)
+                        .foregroundColor(BreachColors.accent)
                 }
             }
         }
         .onAppear {
+            syncBackground()
             viewModel.startNewRun()
         }
+        .onChange(of: viewModel.buffer.count) { _ in syncBackground() }
         .onDisappear {
             viewModel.pauseTimer()
         }
@@ -141,7 +146,11 @@ struct GridRushView: View {
 }
 
 #Preview {
-    NavigationStack {
-        GridRushView()
+    ZStack {
+        BackgroundView(state: .game(bufferFillRatio: 0)).ignoresSafeArea()
+        NavigationStack {
+            GridRushView()
+        }
     }
+    .environmentObject(BackgroundStateManager())
 }

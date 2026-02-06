@@ -10,32 +10,32 @@ struct BackgroundPalette {
         switch state {
         case .menu:
             Self(
-                primary: Color(hex: "0A0E1A"),
-                accent: Color(hex: "00F0FF"),
+                primary: Color(hex: "080C16"),
+                accent: Color(hex: "3B9EFF"),
                 accentOpacity: 1.0
             )
         case .settings:
             Self(
-                primary: Color(hex: "0D1117"),
-                accent: Color(hex: "00F0FF"),
+                primary: Color(hex: "101828"),
+                accent: Color(hex: "6B7C8F"),
                 accentOpacity: 0.4
             )
         case .game:
             Self(
-                primary: Color(hex: "0C0C0C"),
-                accent: Color(hex: "0066FF"),
+                primary: Color(hex: "080C16"),
+                accent: Color(hex: "3B9EFF"),
                 accentOpacity: 1.0
             )
         case .win:
             Self(
-                primary: Color(hex: "0A0E1A"),
-                accent: Color(hex: "FFD700"),
+                primary: Color(hex: "080C16"),
+                accent: Color(hex: "80D4FF"),
                 accentOpacity: 1.0
             )
         case .loss:
             Self(
-                primary: Color(hex: "050505"),
-                accent: Color(hex: "FF1A1A"),
+                primary: Color(hex: "040610"),
+                accent: Color(hex: "FF4057"),
                 accentOpacity: 1.0
             )
         }

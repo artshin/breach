@@ -49,7 +49,7 @@ struct MatrixGridView<VM: GamePlayable>: View {
             }
             .padding(padding)
             .background(
-                RoundedRectangle(cornerRadius: BreachRadius.sm)
+                Rectangle()
                     .stroke(BreachColors.borderSecondary, lineWidth: 1)
             )
             .frame(width: gridWidth)
@@ -89,11 +89,11 @@ struct CellView: View {
                 if cell.isBlocked {
                     Image(systemName: "xmark")
                         .font(.system(size: cellSize > 50 ? 20 : 16, weight: .bold))
-                        .foregroundColor(BreachColors.red.opacity(0.7))
+                        .foregroundColor(BreachColors.cellBlocked.opacity(0.7))
                 } else if cell.isWildcard {
                     Text("??")
                         .font(.system(size: cellSize > 50 ? 18 : 16, weight: .bold, design: .monospaced))
-                        .foregroundColor(BreachColors.pink)
+                        .foregroundColor(BreachColors.cellWildcard)
                 } else if let decayMoves = cell.decayMovesRemaining {
                     VStack(spacing: 0) {
                         Text(cell.code)
@@ -109,7 +109,7 @@ struct CellView: View {
                                 weight: .bold,
                                 design: .monospaced
                             ))
-                            .foregroundColor(BreachColors.orange)
+                            .foregroundColor(BreachColors.cellDecay)
                     }
                 } else {
                     Text(cell.displayCode)
@@ -124,10 +124,9 @@ struct CellView: View {
             .frame(width: cellSize, height: cellSize)
             .background(backgroundColor)
             .overlay(
-                RoundedRectangle(cornerRadius: 4)
+                Rectangle()
                     .stroke(borderColor, lineWidth: borderWidth)
             )
-            .cornerRadius(4)
             .shadow(color: shadowColor, radius: shadowRadius)
         }
         .scaleEffect(isPressed ? 0.9 : 1.0)
@@ -176,68 +175,68 @@ struct CellView: View {
 
     private var textColor: Color {
         if cell.isSelected {
-            return .gray.opacity(0.5)
+            return BreachColors.cellSelected
         }
         if cell.isWildcard {
-            return BreachColors.pink
+            return BreachColors.cellWildcard
         }
         if cell.isDecay {
-            return BreachColors.orange
+            return BreachColors.cellDecay
         }
         if advancesSequence, isValid {
-            return .yellow
+            return BreachColors.cellAdvancing
         }
         if isValid {
-            return .white
+            return BreachColors.textPrimary
         }
-        return .cyan.opacity(0.7)
+        return BreachColors.accent.opacity(0.7)
     }
 
     private var backgroundColor: Color {
         if cell.isBlocked {
-            return BreachColors.red.opacity(0.1)
+            return BreachColors.cellBlocked.opacity(0.1)
         }
         if cell.isSelected {
-            return Color.gray.opacity(0.2)
+            return BreachColors.cellSelected.opacity(0.2)
         }
         if cell.isWildcard {
-            return BreachColors.pink.opacity(0.15)
+            return BreachColors.cellWildcard.opacity(0.15)
         }
         if cell.isDecay {
-            return BreachColors.orange.opacity(0.1)
+            return BreachColors.cellDecay.opacity(0.1)
         }
         if advancesSequence && isValid {
-            return Color.yellow.opacity(0.15)
+            return BreachColors.cellAdvancing.opacity(0.15)
         }
         if isValid {
-            return Color.cyan.opacity(0.15)
+            return BreachColors.cellValid.opacity(0.15)
         }
         if isHighlightedRow || isHighlightedCol {
-            return Color.cyan.opacity(0.05)
+            return BreachColors.cellHighlight
         }
-        return Color.black
+        return BreachColors.background
     }
 
     private var borderColor: Color {
         if cell.isBlocked {
-            return BreachColors.red.opacity(0.5)
+            return BreachColors.cellBlocked.opacity(0.5)
         }
         if cell.isSelected {
-            return .gray.opacity(0.3)
+            return BreachColors.cellSelected.opacity(0.3)
         }
         if cell.isWildcard {
-            return BreachColors.pink
+            return BreachColors.cellWildcard
         }
         if cell.isDecay {
-            return BreachColors.orange.opacity(0.7)
+            return BreachColors.cellDecay.opacity(0.7)
         }
         if advancesSequence, isValid {
-            return .yellow
+            return BreachColors.cellAdvancing
         }
         if isValid {
-            return .cyan
+            return BreachColors.cellValid
         }
-        return .cyan.opacity(0.3)
+        return BreachColors.borderSecondary
     }
 
     private var borderWidth: CGFloat {
@@ -252,10 +251,10 @@ struct CellView: View {
 
     private var shadowColor: Color {
         if cell.isWildcard, isValid {
-            return BreachColors.pink.opacity(0.5)
+            return BreachColors.cellWildcard.opacity(0.5)
         }
         if advancesSequence, isValid {
-            return .yellow.opacity(0.5)
+            return BreachColors.cellAdvancing.opacity(0.5)
         }
         return .clear
     }
@@ -270,5 +269,5 @@ struct CellView: View {
 
 #Preview {
     MatrixGridView(viewModel: GameViewModel())
-        .background(Color.black)
+        .background(BreachColors.background)
 }

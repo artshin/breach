@@ -16,7 +16,7 @@ enum CircuitTracesRenderer {
         guard visibleSegmentCount > 0 else { return }
 
         let traceColor = isShortCircuiting
-            ? Color(hex: "FF1A1A")
+            ? Color(hex: "FF4057")
             : palette.accent
 
         // Draw trace path

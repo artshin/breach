@@ -10,37 +10,43 @@ struct GridClearBonusView: View {
             // Main bonus text
             Text("+\(result.totalBonus)s")
                 .font(BreachTypography.title(48))
-                .foregroundColor(BreachColors.green)
-                .shadow(color: BreachColors.green.opacity(0.5), radius: 15)
+                .foregroundColor(BreachColors.success)
+                .shadow(color: BreachColors.success.opacity(0.5), radius: 15)
 
             // Breakdown
             VStack(spacing: BreachSpacing.xs) {
                 if result.baseBonus > 0 {
-                    BonusLineView(label: "CLEAR", value: "+\(result.baseBonus)s", color: BreachColors.cyan)
+                    BonusLineView(label: "CLEAR", value: "+\(result.baseBonus)s", color: BreachColors.accent)
                 }
 
                 if result.isPerfect {
-                    BonusLineView(label: "PERFECT", value: "+\(result.perfectBonus)s", color: BreachColors.yellow)
+                    BonusLineView(
+                        label: "PERFECT",
+                        value: "+\(result.perfectBonus)s",
+                        color: BreachColors.accentHighlight
+                    )
                 }
 
                 if result.movesSaved > 0 {
-                    BonusLineView(label: "UNDER PAR", value: "+\(result.underParBonus)s", color: BreachColors.green)
+                    BonusLineView(
+                        label: "UNDER PAR",
+                        value: "+\(result.underParBonus)s",
+                        color: BreachColors.accentSecondary
+                    )
                 }
 
                 if result.wasSpeedClear {
-                    BonusLineView(label: "SPEED", value: "+\(result.speedBonus)s", color: BreachColors.pink)
+                    BonusLineView(label: "SPEED", value: "+\(result.speedBonus)s", color: BreachColors.successFlash)
                 }
             }
         }
         .padding(BreachSpacing.xl)
-        .background(
-            RoundedRectangle(cornerRadius: BreachRadius.lg)
-                .fill(BreachColors.panelBackground.opacity(0.95))
-        )
+        .breachGlass(tint: BreachColors.success)
         .overlay(
-            RoundedRectangle(cornerRadius: BreachRadius.lg)
-                .stroke(BreachColors.green.opacity(0.5), lineWidth: 2)
+            Rectangle()
+                .stroke(BreachColors.success.opacity(0.5), lineWidth: 2)
         )
+        .breachBevel(color: BreachColors.success)
         .scaleEffect(isAnimating ? 1.0 : 0.5)
         .opacity(isAnimating ? 1.0 : 0.0)
         .onAppear {
@@ -74,7 +80,7 @@ struct BonusLineView: View {
 
 #Preview {
     ZStack {
-        Color.black.ignoresSafeArea()
+        BreachColors.background.ignoresSafeArea()
 
         GridClearBonusView(
             result: GridClearResult(

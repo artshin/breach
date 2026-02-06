@@ -10,11 +10,10 @@ struct HomeView: View {
     }
 
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
-    @ObservedObject private var settings = GameSettings.shared
+    @EnvironmentObject private var backgroundState: BackgroundStateManager
     @ObservedObject private var tutorialManager = TutorialManager.shared
-    @State private var selectedDifficulty: Difficulty = .easy
-    @State private var showingGame = false
-    @State private var showingGridRush = false
+    @State private var selectedMode: GameMode = .standard
+    @State private var showModeConfig = false
     @State private var activeSheet: Sheet?
 
     private var isWideLayout: Bool {
@@ -22,41 +21,24 @@ struct HomeView: View {
     }
 
     var body: some View {
-        ZStack {
-            // Animated background
-            BackgroundView(state: .menu)
-                .ignoresSafeArea()
+        VStack(spacing: 0) {
+            Spacer()
 
-            VStack(spacing: isWideLayout ? BreachSpacing.xxl : BreachSpacing.xl) {
-                Spacer()
+            titleSection
 
-                // Logo / Title
-                titleSection
+            Spacer()
 
-                Spacer()
+            heroSection
+                .padding(.horizontal, isWideLayout ? BreachSpacing.xxl : BreachSpacing.lg)
 
-                // Difficulty Selection
-                difficultySection
-                    .frame(maxWidth: isWideLayout ? 600 : .infinity)
+            Spacer()
+                .frame(height: BreachSpacing.xxl)
 
-                Spacer()
-
-                // Play Buttons
-                playSection
-
-                Spacer()
-
-                // Bottom buttons
-                bottomSection
-            }
-            .padding(.horizontal, isWideLayout ? BreachSpacing.xxl : BreachSpacing.xl)
-            .padding(.bottom, BreachSpacing.xl)
+            bottomBar
+                .padding(.bottom, BreachSpacing.xl)
         }
-        .navigationDestination(isPresented: $showingGame) {
-            GameView(difficulty: selectedDifficulty)
-        }
-        .navigationDestination(isPresented: $showingGridRush) {
-            GridRushView()
+        .navigationDestination(isPresented: $showModeConfig) {
+            ModeConfigView(mode: selectedMode)
         }
         .sheet(
             item: $activeSheet,
@@ -76,7 +58,9 @@ struct HomeView: View {
                 }
             }
         )
+        .clearNavigationBackground()
         .onAppear {
+            backgroundState.state = .menu
             if tutorialManager.shouldShowTutorial {
                 activeSheet = .tutorial
             }
@@ -90,39 +74,36 @@ struct HomeView: View {
         let subtitleSize: CGFloat = isWideLayout ? 24 : 18
 
         return VStack(spacing: BreachSpacing.sm) {
-            // Decorative line
             HStack(spacing: BreachSpacing.sm) {
                 Rectangle()
-                    .fill(BreachColors.cyan.opacity(0.3))
+                    .fill(BreachColors.accent.opacity(0.3))
                     .frame(height: 1)
                 Text("//")
                     .font(BreachTypography.caption())
-                    .foregroundColor(BreachColors.cyan.opacity(0.5))
+                    .foregroundColor(BreachColors.accent.opacity(0.5))
                 Rectangle()
-                    .fill(BreachColors.cyan.opacity(0.3))
+                    .fill(BreachColors.accent.opacity(0.3))
                     .frame(height: 1)
             }
             .padding(.horizontal, BreachSpacing.xxl)
             .frame(maxWidth: 400)
 
-            // Main title
             GlowingText("BREACH", font: BreachTypography.title(titleSize))
 
             Text("PROTOCOL")
                 .font(BreachTypography.heading(subtitleSize))
-                .foregroundColor(BreachColors.cyan.opacity(0.7))
+                .foregroundColor(BreachColors.accent.opacity(0.7))
                 .tracking(isWideLayout ? 12 : 8)
 
-            // Decorative line
             HStack(spacing: BreachSpacing.sm) {
                 Rectangle()
-                    .fill(BreachColors.cyan.opacity(0.3))
+                    .fill(BreachColors.accent.opacity(0.3))
                     .frame(height: 1)
                 Text("v1.0")
                     .font(BreachTypography.caption(10))
                     .foregroundColor(BreachColors.textMuted)
                 Rectangle()
-                    .fill(BreachColors.cyan.opacity(0.3))
+                    .fill(BreachColors.accent.opacity(0.3))
                     .frame(height: 1)
             }
             .padding(.horizontal, BreachSpacing.xxl)
@@ -130,72 +111,164 @@ struct HomeView: View {
         }
     }
 
-    // MARK: - Difficulty Section
+    // MARK: - Hero Section
 
-    private var difficultySection: some View {
-        VStack(spacing: BreachSpacing.md) {
-            BreachSectionHeader("SELECT DIFFICULTY")
+    private var heroSection: some View {
+        HStack(spacing: BreachSpacing.md) {
+            HeroModeButton(
+                title: "STANDARD",
+                subtitle: "Breach the protocol",
+                icon: "terminal",
+                tag: "SYS://01",
+                color: BreachColors.accent
+            ) {
+                navigateToMode(.standard)
+            }
 
-            LazyVGrid(columns: [
-                GridItem(.flexible()),
-                GridItem(.flexible())
-            ], spacing: BreachSpacing.md) {
-                ForEach(Difficulty.allCases) { difficulty in
-                    let isLocked = !settings.isDifficultyUnlocked(difficulty)
-                    DifficultyCard(
-                        difficulty: difficulty,
-                        isSelected: selectedDifficulty == difficulty,
-                        isLocked: isLocked,
-                        starsEarned: settings.stats(for: difficulty).totalStars
-                    ) {
-                        guard !isLocked else { return }
-                        withAnimation(.easeInOut(duration: 0.2)) {
-                            selectedDifficulty = difficulty
-                        }
-                    }
+            HeroModeButton(
+                title: "GRID RUSH",
+                subtitle: "Race the clock",
+                icon: "bolt.fill",
+                tag: "SYS://02",
+                color: BreachColors.accentHighlight
+            ) {
+                navigateToMode(.gridRush)
+            }
+        }
+    }
+
+    // MARK: - Bottom Bar
+
+    private var bottomBar: some View {
+        VStack(spacing: BreachSpacing.sm) {
+            HStack(spacing: BreachSpacing.sm) {
+                Rectangle().fill(BreachColors.borderMuted).frame(height: 1)
+                Text("SYS")
+                    .font(.system(size: 7, weight: .bold, design: .monospaced))
+                    .foregroundColor(BreachColors.textMuted)
+                Rectangle().fill(BreachColors.borderMuted).frame(height: 1)
+            }
+            .frame(maxWidth: 200)
+
+            HStack(spacing: BreachSpacing.xl) {
+                SystemBarButton(icon: "chart.bar", label: "STATS", color: BreachColors.accentSecondary) {
+                    activeSheet = .stats
+                }
+                SystemBarButton(icon: "gearshape", label: "CONFIG", color: BreachColors.textSecondary) {
+                    activeSheet = .settings
                 }
             }
         }
     }
 
-    // MARK: - Play Section
-
-    private var playSection: some View {
-        VStack(spacing: BreachSpacing.md) {
-            // Standard Play
-            BreachButton("INITIATE BREACH", color: BreachColors.cyan) {
-                showingGame = true
-            }
-
-            Text(
-                "Buffer: \(selectedDifficulty.bufferSize) | Grid: \(selectedDifficulty.gridSize)x\(selectedDifficulty.gridSize)"
-            )
-            .font(BreachTypography.caption(10))
-            .foregroundColor(BreachColors.textMuted)
-
-            // Grid Rush Mode
-            BreachOutlineButton("GRID RUSH", color: BreachColors.yellow) {
-                showingGridRush = true
-            }
-
-            Text("Timed mode • Clear grids for bonus time")
-                .font(BreachTypography.caption(10))
-                .foregroundColor(BreachColors.textMuted)
-        }
+    private func navigateToMode(_ mode: GameMode) {
+        selectedMode = mode
+        showModeConfig = true
     }
+}
 
-    // MARK: - Bottom Section
+// MARK: - Hero Mode Button
 
-    private var bottomSection: some View {
-        HStack(spacing: BreachSpacing.lg) {
-            BreachIconButton("chart.bar") {
-                activeSheet = .stats
+struct HeroModeButton: View {
+    let title: String
+    let subtitle: String
+    let icon: String
+    let tag: String
+    let color: Color
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 0) {
+                color.frame(height: 3)
+                    .shadow(color: color.opacity(0.6), radius: 6, y: 2)
+
+                VStack(spacing: BreachSpacing.md) {
+                    HStack {
+                        Text(tag)
+                            .font(.system(size: 8, weight: .bold, design: .monospaced))
+                            .foregroundColor(color.opacity(0.5))
+                        Spacer()
+                        Circle()
+                            .fill(color)
+                            .frame(width: 5, height: 5)
+                            .shadow(color: color, radius: 4)
+                    }
+
+                    Image(systemName: icon)
+                        .font(.system(size: 36, weight: .thin))
+                        .foregroundStyle(
+                            .linearGradient(
+                                colors: [color, color.opacity(0.6)],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                        .shadow(color: color.opacity(0.7), radius: 12)
+                        .shadow(color: color.opacity(0.3), radius: 25)
+                        .frame(height: 52)
+                        .frame(maxWidth: .infinity)
+
+                    color.opacity(0.25).frame(height: 1)
+
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(title)
+                            .font(BreachTypography.code(14))
+                            .foregroundColor(color)
+                        Text(subtitle)
+                            .font(BreachTypography.caption(9))
+                            .foregroundColor(BreachColors.textMuted)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .padding(BreachSpacing.md)
             }
-
-            BreachIconButton("gearshape") {
-                activeSheet = .settings
-            }
+            .frame(maxWidth: .infinity)
+            .background(
+                ZStack {
+                    BreachColors.surfacePrimary.opacity(0.85)
+                    LinearGradient(
+                        colors: [color.opacity(0.12), color.opacity(0.03), .clear],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                }
+            )
+            .overlay(
+                Rectangle()
+                    .stroke(color.opacity(0.2), lineWidth: 1)
+            )
         }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - System Bar Button
+
+struct SystemBarButton: View {
+    let icon: String
+    let label: String
+    let color: Color
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                Image(systemName: icon)
+                    .font(.system(size: 12))
+                Text(label)
+                    .font(.system(size: 9, weight: .bold, design: .monospaced))
+            }
+            .foregroundColor(color)
+            .padding(.horizontal, BreachSpacing.md)
+            .padding(.vertical, BreachSpacing.sm)
+            .background(color.opacity(0.06))
+            .overlay(
+                Rectangle()
+                    .stroke(color.opacity(0.15), lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
     }
 }
 
@@ -215,49 +288,38 @@ struct DifficultyCard: View {
 
     private var cardColor: Color {
         switch difficulty {
-        case .easy: BreachColors.green
-        case .medium: BreachColors.yellow
-        case .hard: BreachColors.orange
-        case .expert: BreachColors.red
-        }
-    }
-
-    private var difficultyIcon: String {
-        switch difficulty {
-        case .easy: "1.circle"
-        case .medium: "2.circle"
-        case .hard: "3.circle"
-        case .expert: "4.circle"
+        case .easy: BreachColors.tierEasy
+        case .medium: BreachColors.tierMedium
+        case .hard: BreachColors.tierHard
+        case .expert: BreachColors.tierExpert
         }
     }
 
     var body: some View {
         Button(action: action) {
             VStack(spacing: BreachSpacing.sm) {
-                // Icon or lock
                 if isLocked {
                     Image(systemName: "lock.fill")
                         .font(.system(size: isWide ? 32 : 24))
                         .foregroundColor(BreachColors.textMuted)
                 } else {
-                    // Stars indicator
                     HStack(spacing: 2) {
                         ForEach(0..<3, id: \.self) { i in
                             Image(systemName: i < min(starsEarned, 3) ? "star.fill" : "star")
                                 .font(.system(size: isWide ? 14 : 10))
-                                .foregroundColor(i < min(starsEarned, 3) ? .yellow : BreachColors.textMuted
-                                    .opacity(0.3))
+                                .foregroundColor(
+                                    i < min(starsEarned, 3) ? BreachColors.starFilled : BreachColors.starEmpty
+                                )
                         }
                     }
                 }
 
-                // Name
                 Text(difficulty.displayName.uppercased())
                     .font(BreachTypography.caption(isWide ? 14 : 12))
-                    .foregroundColor(isLocked ? BreachColors
-                        .textMuted : (isSelected ? cardColor : BreachColors.textPrimary))
+                    .foregroundColor(
+                        isLocked ? BreachColors.textMuted : (isSelected ? cardColor : BreachColors.textPrimary)
+                    )
 
-                // Stats or lock message
                 if isLocked {
                     Text("LOCKED")
                         .font(BreachTypography.caption(isWide ? 10 : 8))
@@ -266,7 +328,7 @@ struct DifficultyCard: View {
                     HStack(spacing: BreachSpacing.xs) {
                         Text("\(difficulty.sequenceCount) SEQ")
                             .font(BreachTypography.caption(isWide ? 11 : 9))
-                        Text("•")
+                        Text("\u{2022}")
                         Text("\(difficulty.bufferSize) BUF")
                             .font(BreachTypography.caption(isWide ? 11 : 9))
                     }
@@ -275,15 +337,15 @@ struct DifficultyCard: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, isWide ? BreachSpacing.xl : BreachSpacing.lg)
-            .background(isSelected && !isLocked ? cardColor.opacity(0.15) : BreachColors.cardBackground)
+            .background(isSelected && !isLocked ? cardColor.opacity(0.15) : BreachColors.surfacePrimary)
             .overlay(
-                RoundedRectangle(cornerRadius: BreachRadius.md)
+                Rectangle()
                     .stroke(
                         isSelected && !isLocked ? cardColor : BreachColors.borderSecondary,
                         lineWidth: isSelected && !isLocked ? 2 : 1
                     )
             )
-            .cornerRadius(BreachRadius.md)
+            .breachBevel(color: isSelected && !isLocked ? cardColor : BreachColors.accent)
             .opacity(isLocked ? 0.6 : 1.0)
         }
         .disabled(isLocked)
@@ -291,7 +353,14 @@ struct DifficultyCard: View {
 }
 
 #Preview {
-    NavigationStack {
-        HomeView()
+    ZStack {
+        BackgroundView(state: .menu).ignoresSafeArea()
+        NavigationStack {
+            HomeView()
+        }
+    }
+    .environmentObject(BackgroundStateManager())
+    .onAppear {
+        GameSettings.shared.backgroundStyle = .circuitTraces
     }
 }

@@ -44,7 +44,7 @@ struct SettingsView: View {
                             SettingsButton(
                                 title: "Show Tutorial",
                                 icon: "questionmark.circle",
-                                color: BreachColors.cyan
+                                color: BreachColors.accent
                             ) {
                                 TutorialManager.shared.resetTutorial()
                                 dismiss()
@@ -53,7 +53,7 @@ struct SettingsView: View {
                             SettingsButton(
                                 title: "Reset Progress",
                                 icon: "arrow.counterclockwise",
-                                color: BreachColors.red
+                                color: BreachColors.danger
                             ) {
                                 showResetConfirmation = true
                             }
@@ -69,7 +69,7 @@ struct SettingsView: View {
                             SettingsButton(
                                 title: "Privacy Policy",
                                 icon: "lock.shield",
-                                color: BreachColors.cyan
+                                color: BreachColors.accent
                             ) {
                                 // Will open privacy policy URL
                             }
@@ -99,7 +99,7 @@ struct SettingsView: View {
         HStack {
             Text("SETTINGS")
                 .font(BreachTypography.heading())
-                .foregroundColor(BreachColors.cyan)
+                .foregroundColor(BreachColors.accent)
 
             Spacer()
 
@@ -108,7 +108,7 @@ struct SettingsView: View {
             } label: {
                 Image(systemName: "xmark")
                     .font(.system(size: 16, weight: .bold))
-                    .foregroundColor(BreachColors.cyan)
+                    .foregroundColor(BreachColors.accent)
                     .frame(width: 32, height: 32)
             }
         }
@@ -148,7 +148,7 @@ struct SettingsToggle: View {
         HStack(spacing: BreachSpacing.md) {
             Image(systemName: icon)
                 .font(.system(size: 18))
-                .foregroundColor(BreachColors.cyan)
+                .foregroundColor(BreachColors.accent)
                 .frame(width: 24)
 
             Text(title)
@@ -159,7 +159,7 @@ struct SettingsToggle: View {
 
             Toggle("", isOn: $isOn)
                 .labelsHidden()
-                .tint(BreachColors.cyan)
+                .tint(BreachColors.accent)
         }
         .padding(.vertical, BreachSpacing.sm)
     }
@@ -252,11 +252,10 @@ struct BackgroundStyleOption: View {
                 // Mini preview
                 MiniBackgroundPreview(style: style)
                     .frame(width: 60, height: 40)
-                    .cornerRadius(BreachRadius.sm)
                     .overlay(
-                        RoundedRectangle(cornerRadius: BreachRadius.sm)
+                        Rectangle()
                             .stroke(
-                                isSelected ? BreachColors.cyan : BreachColors.borderSecondary,
+                                isSelected ? BreachColors.accent : BreachColors.borderSecondary,
                                 lineWidth: isSelected ? 2 : 1
                             )
                     )
@@ -265,7 +264,7 @@ struct BackgroundStyleOption: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(style.rawValue)
                         .font(BreachTypography.body())
-                        .foregroundColor(isSelected ? BreachColors.cyan : BreachColors.textPrimary)
+                        .foregroundColor(isSelected ? BreachColors.accent : BreachColors.textPrimary)
 
                     Text(style.description)
                         .font(BreachTypography.caption(10))
@@ -278,7 +277,7 @@ struct BackgroundStyleOption: View {
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.system(size: 18))
-                        .foregroundColor(BreachColors.cyan)
+                        .foregroundColor(BreachColors.accent)
                 }
             }
             .padding(.vertical, BreachSpacing.sm)
@@ -296,7 +295,7 @@ struct MiniBackgroundPreview: View {
             // Dark background
             context.fill(
                 Path(CGRect(origin: .zero, size: size)),
-                with: .color(Color(hex: "0A0E1A"))
+                with: .color(Color(hex: "080C16"))
             )
 
             switch style {
@@ -309,7 +308,7 @@ struct MiniBackgroundPreview: View {
     }
 
     private func drawMiniGrid(context: GraphicsContext, size: CGSize) {
-        let cyan = Color(hex: "00F0FF")
+        let cyan = Color(hex: "3B9EFF")
         let vanishingY = size.height * 0.3
 
         // Horizontal lines
@@ -340,7 +339,7 @@ struct MiniBackgroundPreview: View {
     }
 
     private func drawMiniCircuit(context: GraphicsContext, size: CGSize) {
-        let cyan = Color(hex: "00F0FF")
+        let cyan = Color(hex: "3B9EFF")
 
         // Draw a few simple circuit traces
         let traces: [[(CGFloat, CGFloat)]] = [

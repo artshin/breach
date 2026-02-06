@@ -13,11 +13,11 @@ struct GridRushHeaderView: View {
 
     private var timerColor: Color {
         if timeRemaining <= 10 {
-            return BreachColors.red
+            return BreachColors.timerCritical
         } else if timeRemaining <= 20 {
-            return BreachColors.orange
+            return BreachColors.timerWarning
         }
-        return BreachColors.cyan
+        return BreachColors.timerSafe
     }
 
     var body: some View {
@@ -29,7 +29,7 @@ struct GridRushHeaderView: View {
                     .foregroundColor(BreachColors.textMuted)
                 Text("#\(gridNumber)")
                     .font(BreachTypography.heading(isWide ? 28 : 24))
-                    .foregroundColor(BreachColors.cyan)
+                    .foregroundColor(BreachColors.accent)
             }
             .frame(minWidth: 70)
 
@@ -56,18 +56,18 @@ struct GridRushHeaderView: View {
                     .foregroundColor(BreachColors.textMuted)
                 Text("\(score)")
                     .font(BreachTypography.heading(isWide ? 28 : 24))
-                    .foregroundColor(BreachColors.yellow)
+                    .foregroundColor(BreachColors.accentHighlight)
             }
             .frame(minWidth: 70)
         }
         .padding(.horizontal, BreachSpacing.lg)
         .padding(.vertical, BreachSpacing.md)
-        .background(BreachColors.panelBackground)
+        .breachGlass(tint: timerColor, opacity: 0.05)
         .overlay(
-            RoundedRectangle(cornerRadius: BreachRadius.sm)
+            Rectangle()
                 .stroke(timerColor.opacity(0.3), lineWidth: 1)
         )
-        .cornerRadius(BreachRadius.sm)
+        .breachBevel(color: timerColor)
     }
 
     private func formatTime(_ seconds: Int) -> String {
@@ -79,7 +79,7 @@ struct GridRushHeaderView: View {
 
 #Preview {
     ZStack {
-        Color.black.ignoresSafeArea()
+        BreachColors.background.ignoresSafeArea()
         VStack(spacing: 20) {
             GridRushHeaderView(timeRemaining: 45, gridNumber: 3, score: 1250)
             GridRushHeaderView(timeRemaining: 15, gridNumber: 5, score: 2500)

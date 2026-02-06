@@ -39,7 +39,8 @@ build:
 # Build for device (Release)
 release:
 	@echo "Building $(SCHEME) for device (Release)..."
-	@security unlock-keychain ~/Library/Keychains/login.keychain-db 2>/dev/null || true
+	@if [ -f .env ]; then . ./.env; fi; \
+	security unlock-keychain -p "$$KEYCHAIN_PASSWORD" ~/Library/Keychains/login.keychain-db 2>/dev/null || true
 	xcodebuild \
 		-project $(PROJECT) \
 		-scheme $(SCHEME) \
@@ -81,7 +82,8 @@ endif
 	fi; \
 	echo "Found device $(DEVICE) with UDID: $$DEVICE_UDID"; \
 	echo "Building $(SCHEME) for device..."; \
-	security unlock-keychain ~/Library/Keychains/login.keychain-db 2>/dev/null || true; \
+	if [ -f .env ]; then . ./.env; fi; \
+	security unlock-keychain -p "$$KEYCHAIN_PASSWORD" ~/Library/Keychains/login.keychain-db 2>/dev/null || true; \
 	xcodebuild \
 		-project $(PROJECT) \
 		-scheme $(SCHEME) \

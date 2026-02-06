@@ -22,8 +22,8 @@ struct GridRushGameOverView: View {
                 VStack(spacing: BreachSpacing.sm) {
                     Text("TIME'S UP")
                         .font(BreachTypography.title(isWide ? 42 : 36))
-                        .foregroundColor(BreachColors.red)
-                        .shadow(color: BreachColors.red.opacity(0.5), radius: 10)
+                        .foregroundColor(BreachColors.dangerGlow)
+                        .shadow(color: BreachColors.dangerGlow.opacity(0.5), radius: 10)
 
                     Text("RUN COMPLETE")
                         .font(BreachTypography.caption(14))
@@ -39,33 +39,37 @@ struct GridRushGameOverView: View {
                             .foregroundColor(BreachColors.textMuted)
                         Text("\(rushState.totalScore)")
                             .font(BreachTypography.title(isWide ? 56 : 48))
-                            .foregroundColor(BreachColors.yellow)
-                            .shadow(color: BreachColors.yellow.opacity(0.5), radius: 10)
+                            .foregroundColor(BreachColors.accentHighlight)
+                            .shadow(color: BreachColors.accentHighlight.opacity(0.5), radius: 10)
                     }
 
                     // Stats row
                     HStack(spacing: BreachSpacing.xl) {
-                        StatColumn(label: "GRIDS", value: "\(rushState.gridsCompleted)", color: BreachColors.cyan)
-                        StatColumn(label: "PERFECTS", value: "\(rushState.perfectClears)", color: BreachColors.green)
+                        StatColumn(label: "GRIDS", value: "\(rushState.gridsCompleted)", color: BreachColors.accent)
+                        StatColumn(
+                            label: "PERFECTS",
+                            value: "\(rushState.perfectClears)",
+                            color: BreachColors.accentHighlight
+                        )
                         StatColumn(
                             label: "BEST STREAK",
                             value: "\(rushState.bestPerfectStreak)",
-                            color: BreachColors.orange
+                            color: BreachColors.accentSecondary
                         )
                     }
                 }
                 .padding(BreachSpacing.xl)
-                .background(BreachColors.panelBackground)
+                .breachGlass()
                 .overlay(
-                    RoundedRectangle(cornerRadius: BreachRadius.md)
+                    Rectangle()
                         .stroke(BreachColors.borderSecondary, lineWidth: 1)
                 )
-                .cornerRadius(BreachRadius.md)
+                .breachBevel()
 
                 // Buttons
                 VStack(spacing: BreachSpacing.md) {
-                    BreachButton("PLAY AGAIN", color: BreachColors.cyan, action: onPlayAgain)
-                    BreachOutlineButton("HOME", color: BreachColors.cyan, action: onGoHome)
+                    BreachButton("PLAY AGAIN", color: BreachColors.accent, action: onPlayAgain)
+                    BreachOutlineButton("HOME", color: BreachColors.accent, action: onGoHome)
                 }
             }
             .padding(BreachSpacing.xl)

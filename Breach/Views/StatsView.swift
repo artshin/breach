@@ -38,7 +38,7 @@ struct StatsView: View {
         HStack {
             Text("STATISTICS")
                 .font(BreachTypography.heading())
-                .foregroundColor(BreachColors.cyan)
+                .foregroundColor(BreachColors.accent)
 
             Spacer()
 
@@ -47,7 +47,7 @@ struct StatsView: View {
             } label: {
                 Image(systemName: "xmark")
                     .font(.system(size: 16, weight: .bold))
-                    .foregroundColor(BreachColors.cyan)
+                    .foregroundColor(BreachColors.accent)
                     .frame(width: 32, height: 32)
             }
         }
@@ -69,28 +69,28 @@ struct StatsView: View {
                     title: "GAMES",
                     value: "\(settings.totalGamesPlayed)",
                     icon: "gamecontroller",
-                    color: BreachColors.cyan
+                    color: BreachColors.accent
                 )
 
                 StatCard(
                     title: "STARS",
                     value: "\(settings.totalStarsEarned)",
                     icon: "star.fill",
-                    color: BreachColors.yellow
+                    color: BreachColors.accentHighlight
                 )
 
                 StatCard(
                     title: "WIN RATE",
                     value: String(format: "%.0f%%", settings.overallWinRate * 100),
                     icon: "percent",
-                    color: BreachColors.green
+                    color: BreachColors.success
                 )
 
                 StatCard(
                     title: "BEST STREAK",
                     value: "\(settings.bestOverallStreak)",
                     icon: "flame",
-                    color: BreachColors.orange
+                    color: BreachColors.accentSecondary
                 )
             }
         }
@@ -100,7 +100,7 @@ struct StatsView: View {
 
     private var gridRushStatsSection: some View {
         VStack(spacing: BreachSpacing.md) {
-            BreachSectionHeader("GRID RUSH", color: BreachColors.yellow)
+            BreachSectionHeader("GRID RUSH", color: BreachColors.accentHighlight)
 
             let stats = settings.gridRushStats
 
@@ -113,28 +113,28 @@ struct StatsView: View {
                         title: "RUNS",
                         value: "\(stats.totalRuns)",
                         icon: "arrow.clockwise",
-                        color: BreachColors.yellow
+                        color: BreachColors.accentHighlight
                     )
 
                     StatCard(
                         title: "HIGH SCORE",
                         value: "\(stats.highScore)",
                         icon: "trophy",
-                        color: BreachColors.yellow
+                        color: BreachColors.accentHighlight
                     )
 
                     StatCard(
                         title: "BEST GRIDS",
                         value: "\(stats.bestGridsCleared)",
                         icon: "square.grid.3x3",
-                        color: BreachColors.cyan
+                        color: BreachColors.accent
                     )
 
                     StatCard(
                         title: "TOTAL GRIDS",
                         value: "\(stats.totalGridsCleared)",
                         icon: "square.grid.2x2",
-                        color: BreachColors.cyan
+                        color: BreachColors.accent
                     )
                 }
 
@@ -143,7 +143,7 @@ struct StatsView: View {
                     VStack(spacing: BreachSpacing.xs) {
                         Text("\(stats.totalPerfectClears)")
                             .font(BreachTypography.heading(20))
-                            .foregroundColor(BreachColors.green)
+                            .foregroundColor(BreachColors.success)
                         Text("PERFECTS")
                             .font(BreachTypography.caption(10))
                             .foregroundColor(BreachColors.textMuted)
@@ -152,7 +152,7 @@ struct StatsView: View {
                     VStack(spacing: BreachSpacing.xs) {
                         Text("\(stats.bestPerfectStreak)")
                             .font(BreachTypography.heading(20))
-                            .foregroundColor(BreachColors.orange)
+                            .foregroundColor(BreachColors.accentSecondary)
                         Text("BEST STREAK")
                             .font(BreachTypography.caption(10))
                             .foregroundColor(BreachColors.textMuted)
@@ -163,7 +163,7 @@ struct StatsView: View {
                             let avgGrids = Double(stats.totalGridsCleared) / Double(stats.totalRuns)
                             Text(String(format: "%.1f", avgGrids))
                                 .font(BreachTypography.heading(20))
-                                .foregroundColor(BreachColors.pink)
+                                .foregroundColor(BreachColors.warning)
                             Text("AVG GRIDS")
                                 .font(BreachTypography.caption(10))
                                 .foregroundColor(BreachColors.textMuted)
@@ -172,18 +172,18 @@ struct StatsView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .padding(BreachSpacing.md)
-                .background(BreachColors.panelBackground)
+                .breachGlass()
                 .overlay(
-                    RoundedRectangle(cornerRadius: BreachRadius.md)
+                    Rectangle()
                         .stroke(BreachColors.borderSecondary, lineWidth: 1)
                 )
-                .cornerRadius(BreachRadius.md)
+                .breachBevel()
             } else {
                 // No runs yet
                 VStack(spacing: BreachSpacing.sm) {
                     Image(systemName: "bolt.fill")
                         .font(.system(size: 32))
-                        .foregroundColor(BreachColors.yellow.opacity(0.5))
+                        .foregroundColor(BreachColors.accentHighlight.opacity(0.5))
 
                     Text("No Grid Rush runs yet")
                         .font(BreachTypography.body())
@@ -195,12 +195,12 @@ struct StatsView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .padding(BreachSpacing.xl)
-                .background(BreachColors.panelBackground)
+                .breachGlass()
                 .overlay(
-                    RoundedRectangle(cornerRadius: BreachRadius.md)
+                    Rectangle()
                         .stroke(BreachColors.borderSecondary, lineWidth: 1)
                 )
-                .cornerRadius(BreachRadius.md)
+                .breachBevel()
             }
         }
     }
@@ -246,12 +246,12 @@ struct StatCard: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, BreachSpacing.lg)
-        .background(BreachColors.cardBackground)
+        .breachGlass()
         .overlay(
-            RoundedRectangle(cornerRadius: BreachRadius.md)
+            Rectangle()
                 .stroke(color.opacity(0.3), lineWidth: 1)
         )
-        .cornerRadius(BreachRadius.md)
+        .breachBevel()
     }
 }
 
@@ -264,10 +264,10 @@ struct DifficultyStatsRow: View {
 
     private var difficultyColor: Color {
         switch difficulty {
-        case .easy: BreachColors.green
-        case .medium: BreachColors.yellow
-        case .hard: BreachColors.orange
-        case .expert: BreachColors.red
+        case .easy: BreachColors.tierEasy
+        case .medium: BreachColors.tierMedium
+        case .hard: BreachColors.tierHard
+        case .expert: BreachColors.tierExpert
         }
     }
 
@@ -285,8 +285,9 @@ struct DifficultyStatsRow: View {
                         ForEach(0..<3, id: \.self) { i in
                             Image(systemName: i < min(stats.totalStars, 3) ? "star.fill" : "star")
                                 .font(.system(size: 10))
-                                .foregroundColor(i < min(stats.totalStars, 3) ? .yellow : BreachColors.textMuted
-                                    .opacity(0.3))
+                                .foregroundColor(
+                                    i < min(stats.totalStars, 3) ? BreachColors.starFilled : BreachColors.starEmpty
+                                )
                         }
                     }
                 }

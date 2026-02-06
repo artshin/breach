@@ -7,7 +7,7 @@ struct SequencePanelView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text("SEQUENCES")
                 .font(.system(size: 12, weight: .bold, design: .monospaced))
-                .foregroundColor(.cyan.opacity(0.7))
+                .foregroundColor(BreachColors.accent.opacity(0.7))
 
             ForEach(sequences) { sequence in
                 SequenceRowView(sequence: sequence)
@@ -16,9 +16,10 @@ struct SequencePanelView: View {
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
-            RoundedRectangle(cornerRadius: 4)
-                .stroke(Color.cyan.opacity(0.5), lineWidth: 1)
+            Rectangle()
+                .stroke(BreachColors.borderPrimary, lineWidth: 1)
         )
+        .breachBevel()
     }
 }
 
@@ -63,23 +64,23 @@ struct SequenceRowView: View {
             if sequence.isComplete {
                 Image(systemName: "checkmark.circle.fill")
                     .font(.system(size: 12))
-                    .foregroundColor(.green)
+                    .foregroundColor(BreachColors.sequenceComplete)
                     .scaleEffect(checkmarkScale)
                     .shadow(
-                        color: showCompletionGlow ? .green.opacity(0.8) : .clear,
+                        color: showCompletionGlow ? BreachColors.sequenceComplete.opacity(0.8) : .clear,
                         radius: showCompletionGlow ? 8 : 0
                     )
             } else if sequence.isImpossible {
                 Image(systemName: "xmark.circle.fill")
                     .font(.system(size: 12))
-                    .foregroundColor(.red.opacity(0.7))
+                    .foregroundColor(BreachColors.sequenceFailed.opacity(0.7))
             }
         }
         .padding(.vertical, 4)
         .padding(.horizontal, 4)
         .background(
-            RoundedRectangle(cornerRadius: 4)
-                .fill(showCompletionGlow ? Color.green.opacity(0.1) : Color.clear)
+            Rectangle()
+                .fill(showCompletionGlow ? BreachColors.sequenceComplete.opacity(0.1) : Color.clear)
         )
         .opacity(sequence.isImpossible ? 0.5 : 1.0)
         .accessibilityElement(children: .combine)
@@ -128,47 +129,47 @@ struct SequenceRowView: View {
 
     private var statusColor: Color {
         if sequence.isComplete {
-            .green
+            BreachColors.sequenceComplete
         } else if sequence.isImpossible {
-            .red.opacity(0.5)
+            BreachColors.sequenceFailed.opacity(0.5)
         } else if sequence.matchedCount > 0 {
-            .yellow
+            BreachColors.sequenceNext
         } else {
-            .cyan.opacity(0.5)
+            BreachColors.accent.opacity(0.5)
         }
     }
 
     private func codeColor(at index: Int) -> Color {
         if sequence.isComplete {
-            .green
+            BreachColors.sequenceComplete
         } else if sequence.isImpossible {
-            .gray
+            BreachColors.textMuted
         } else if index < sequence.matchedCount {
-            .green
+            BreachColors.sequenceMatched
         } else if index == sequence.matchedCount {
-            .yellow
+            BreachColors.sequenceNext
         } else {
-            .pink
+            BreachColors.sequenceRemaining
         }
     }
 
     private var separatorColor: Color {
         if sequence.isComplete {
-            .green.opacity(0.5)
+            BreachColors.sequenceComplete.opacity(0.5)
         } else if sequence.isImpossible {
-            .gray.opacity(0.3)
+            BreachColors.textMuted.opacity(0.3)
         } else {
-            .cyan.opacity(0.3)
+            BreachColors.accent.opacity(0.3)
         }
     }
 
     private var progressColor: Color {
         if sequence.isComplete {
-            .green
+            BreachColors.sequenceComplete
         } else if sequence.isImpossible {
-            .gray
+            BreachColors.textMuted
         } else {
-            .cyan.opacity(0.7)
+            BreachColors.accent.opacity(0.7)
         }
     }
 
@@ -195,8 +196,13 @@ struct SequenceView: View {
         SequenceRowView(sequence: sequence)
             .padding(12)
             .background(
-                RoundedRectangle(cornerRadius: 4)
-                    .stroke(sequence.isComplete ? Color.green : Color.pink.opacity(0.5), lineWidth: 1)
+                Rectangle()
+                    .stroke(
+                        sequence.isComplete
+                            ? BreachColors.sequenceComplete
+                            : BreachColors.sequenceRemaining.opacity(0.5),
+                        lineWidth: 1
+                    )
             )
     }
 }
@@ -214,5 +220,5 @@ struct SequenceView: View {
         ])
     }
     .padding()
-    .background(Color.black)
+    .background(BreachColors.background)
 }

@@ -7,35 +7,7 @@ struct BreachButton: View {
     let color: Color
     let action: () -> Void
 
-    init(_ title: String, color: Color = BreachColors.cyan, action: @escaping () -> Void) {
-        self.title = title
-        self.color = color
-        self.action = action
-    }
-
-    var body: some View {
-        Button(action: action) {
-            Text(title)
-                .font(BreachTypography.body(14))
-                .fontWeight(.bold)
-                .foregroundColor(.black)
-                .padding(.horizontal, BreachSpacing.xl)
-                .padding(.vertical, BreachSpacing.md)
-                .frame(minWidth: 140)
-                .background(color)
-                .cornerRadius(BreachRadius.sm)
-        }
-    }
-}
-
-// MARK: - Secondary Button (Outline)
-
-struct BreachOutlineButton: View {
-    let title: String
-    let color: Color
-    let action: () -> Void
-
-    init(_ title: String, color: Color = BreachColors.cyan, action: @escaping () -> Void) {
+    init(_ title: String, color: Color = BreachColors.accent, action: @escaping () -> Void) {
         self.title = title
         self.color = color
         self.action = action
@@ -50,12 +22,44 @@ struct BreachOutlineButton: View {
                 .padding(.horizontal, BreachSpacing.xl)
                 .padding(.vertical, BreachSpacing.md)
                 .frame(minWidth: 140)
-                .background(color.opacity(0.1))
+                .breachGlass(tint: color)
                 .overlay(
-                    RoundedRectangle(cornerRadius: BreachRadius.sm)
+                    Rectangle()
+                        .stroke(color, lineWidth: 1)
+                )
+                .breachBevel(color: color)
+        }
+    }
+}
+
+// MARK: - Secondary Button (Outline)
+
+struct BreachOutlineButton: View {
+    let title: String
+    let color: Color
+    let action: () -> Void
+
+    init(_ title: String, color: Color = BreachColors.accent, action: @escaping () -> Void) {
+        self.title = title
+        self.color = color
+        self.action = action
+    }
+
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(BreachTypography.body(14))
+                .fontWeight(.bold)
+                .foregroundColor(color)
+                .padding(.horizontal, BreachSpacing.xl)
+                .padding(.vertical, BreachSpacing.md)
+                .frame(minWidth: 140)
+                .breachGlass(tint: color, opacity: 0.08)
+                .overlay(
+                    Rectangle()
                         .stroke(color.opacity(0.5), lineWidth: 1)
                 )
-                .cornerRadius(BreachRadius.sm)
+                .breachBevel(color: color, intensity: 0.6)
         }
     }
 }
@@ -65,11 +69,13 @@ struct BreachOutlineButton: View {
 struct BreachIconButton: View {
     let icon: String
     let size: CGFloat
+    let color: Color
     let action: () -> Void
 
-    init(_ icon: String, size: CGFloat = 44, action: @escaping () -> Void) {
+    init(_ icon: String, size: CGFloat = 44, color: Color = BreachColors.accent, action: @escaping () -> Void) {
         self.icon = icon
         self.size = size
+        self.color = color
         self.action = action
     }
 
@@ -77,14 +83,14 @@ struct BreachIconButton: View {
         Button(action: action) {
             Image(systemName: icon)
                 .font(.system(size: size * 0.4))
-                .foregroundColor(BreachColors.cyan)
+                .foregroundColor(color)
                 .frame(width: size, height: size)
-                .background(BreachColors.cyan.opacity(0.1))
+                .breachGlass(tint: color, opacity: 0.08)
                 .overlay(
-                    RoundedRectangle(cornerRadius: BreachRadius.sm)
-                        .stroke(BreachColors.borderSecondary, lineWidth: 1)
+                    Rectangle()
+                        .stroke(color.opacity(0.3), lineWidth: 1)
                 )
-                .cornerRadius(BreachRadius.sm)
+                .breachBevel(color: color, intensity: 0.6)
         }
     }
 }
@@ -97,12 +103,12 @@ struct BreachPanel<Content: View>: View {
     var body: some View {
         content
             .padding(BreachSpacing.md)
-            .background(BreachColors.panelBackground)
+            .breachGlass(tint: BreachColors.accent, opacity: 0.05)
             .overlay(
-                RoundedRectangle(cornerRadius: BreachRadius.sm)
+                Rectangle()
                     .stroke(BreachColors.borderSecondary, lineWidth: 1)
             )
-            .cornerRadius(BreachRadius.sm)
+            .breachBevel()
     }
 }
 
@@ -113,7 +119,7 @@ struct BreachCard<Content: View>: View {
     let color: Color
     let content: Content
 
-    init(isSelected: Bool = false, color: Color = BreachColors.cyan, @ViewBuilder content: () -> Content) {
+    init(isSelected: Bool = false, color: Color = BreachColors.accent, @ViewBuilder content: () -> Content) {
         self.isSelected = isSelected
         self.color = color
         self.content = content()
@@ -122,12 +128,12 @@ struct BreachCard<Content: View>: View {
     var body: some View {
         content
             .padding(BreachSpacing.lg)
-            .background(isSelected ? color.opacity(0.15) : BreachColors.cardBackground)
+            .background(isSelected ? color.opacity(0.15) : BreachColors.surfacePrimary)
             .overlay(
-                RoundedRectangle(cornerRadius: BreachRadius.md)
+                Rectangle()
                     .stroke(isSelected ? color : BreachColors.borderSecondary, lineWidth: isSelected ? 2 : 1)
             )
-            .cornerRadius(BreachRadius.md)
+            .breachBevel(color: isSelected ? color : BreachColors.accent)
     }
 }
 
@@ -137,7 +143,7 @@ struct BreachSectionHeader: View {
     let title: String
     let color: Color
 
-    init(_ title: String, color: Color = BreachColors.cyan) {
+    init(_ title: String, color: Color = BreachColors.accent) {
         self.title = title
         self.color = color
     }
@@ -156,7 +162,7 @@ struct GlowingText: View {
     let font: Font
     let color: Color
 
-    init(_ text: String, font: Font = BreachTypography.title(), color: Color = BreachColors.cyan) {
+    init(_ text: String, font: Font = BreachTypography.title(), color: Color = BreachColors.accent) {
         self.text = text
         self.font = font
         self.color = color
@@ -218,13 +224,13 @@ struct ScanlineOverlay: View {
                 VStack(alignment: .leading) {
                     BreachSectionHeader("SECTION")
                     Text("Content goes here")
-                        .foregroundColor(.white)
+                        .foregroundColor(BreachColors.textPrimary)
                 }
             }
 
             BreachCard(isSelected: true) {
                 Text("Selected Card")
-                    .foregroundColor(.white)
+                    .foregroundColor(BreachColors.textPrimary)
             }
 
             BreachButton("PRIMARY") {}
