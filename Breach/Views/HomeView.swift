@@ -58,16 +58,24 @@ struct HomeView: View {
         .navigationDestination(isPresented: $showingGridRush) {
             GridRushView()
         }
-        .sheet(item: $activeSheet) { sheet in
-            switch sheet {
-            case .settings:
-                SettingsView()
-            case .stats:
-                StatsView()
-            case .tutorial:
-                TutorialView(onComplete: {})
+        .sheet(
+            item: $activeSheet,
+            onDismiss: {
+                if tutorialManager.shouldShowTutorial {
+                    activeSheet = .tutorial
+                }
+            },
+            content: { sheet in
+                switch sheet {
+                case .settings:
+                    SettingsView()
+                case .stats:
+                    StatsView()
+                case .tutorial:
+                    TutorialView(onComplete: {})
+                }
             }
-        }
+        )
         .onAppear {
             if tutorialManager.shouldShowTutorial {
                 activeSheet = .tutorial

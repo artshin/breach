@@ -48,15 +48,21 @@ class GameSettings: ObservableObject {
 
     // MARK: - Progression
 
-    @Published var unlockedDifficulties: Set<Difficulty> = [.easy]
+    @Published var unlockedDifficulties: Set<Difficulty> = [.easy] {
+        didSet { save() }
+    }
 
     // MARK: - Per-Difficulty Statistics
 
-    @Published var difficultyStats: [Difficulty: DifficultyStats] = [:]
+    @Published var difficultyStats: [Difficulty: DifficultyStats] = [:] {
+        didSet { save() }
+    }
 
     // MARK: - Grid Rush Statistics
 
-    @Published var gridRushStats = GridRushStats()
+    @Published var gridRushStats = GridRushStats() {
+        didSet { save() }
+    }
 
     // MARK: - Computed Statistics
 
@@ -79,6 +85,8 @@ class GameSettings: ObservableObject {
         difficultyStats.values.map(\.bestStreak).max() ?? 0
     }
 
+    private var isLoading = false
+
     // MARK: - Persistence Keys
 
     private enum Keys {
@@ -99,6 +107,8 @@ class GameSettings: ObservableObject {
     // MARK: - Persistence
 
     private func load() {
+        isLoading = true
+        defer { isLoading = false }
         let defaults = UserDefaults.standard
 
         if defaults.object(forKey: Keys.soundEnabled) != nil {
@@ -143,6 +153,7 @@ class GameSettings: ObservableObject {
     }
 
     private func save() {
+        guard !isLoading else { return }
         let defaults = UserDefaults.standard
         defaults.set(soundEnabled, forKey: Keys.soundEnabled)
         defaults.set(hapticsEnabled, forKey: Keys.hapticsEnabled)
