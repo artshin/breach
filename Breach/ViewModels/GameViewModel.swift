@@ -7,11 +7,19 @@ class GameViewModel: ObservableObject, GamePlayable {
     @Published var selectedDifficulty: Difficulty = .easy
 
     // Feedback managers
-    private let sound = SoundManager.shared
-    private let haptics = HapticsManager.shared
-    private let settings = GameSettings.shared
+    private let sound: SoundManager
+    private let haptics: HapticsManager
+    private let settings: GameSettings
 
-    init(difficulty: Difficulty = .easy) {
+    init(
+        difficulty: Difficulty = .easy,
+        sound: SoundManager = .shared,
+        haptics: HapticsManager = .shared,
+        settings: GameSettings = .shared
+    ) {
+        self.sound = sound
+        self.haptics = haptics
+        self.settings = settings
         selectedDifficulty = difficulty
         gameState = GameState(difficulty: difficulty)
     }
@@ -121,9 +129,10 @@ class GameViewModel: ObservableObject, GamePlayable {
         // Check for newly impossible sequences
         let newlyImpossible = gameState.sequences.filter { $0.isImpossible && !$0.isComplete }
         if !newlyImpossible.isEmpty {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { [weak self] in
-                self?.sound.playSequenceFailed()
-                self?.haptics.sequenceFailed()
+            Task { [sound, haptics] in
+                try? await Task.sleep(for: .milliseconds(150))
+                sound.playSequenceFailed()
+                haptics.sequenceFailed()
             }
         }
 
@@ -143,9 +152,10 @@ class GameViewModel: ObservableObject, GamePlayable {
             gameState.gameResult = result
             settings.recordGameResult(difficulty: selectedDifficulty, stars: result.stars)
 
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
-                self?.sound.playGameWin()
-                self?.haptics.gameWin()
+            Task { [sound, haptics] in
+                try? await Task.sleep(for: .milliseconds(300))
+                sound.playGameWin()
+                haptics.gameWin()
             }
             return
         }
@@ -161,13 +171,14 @@ class GameViewModel: ObservableObject, GamePlayable {
             gameState.gameResult = result
             settings.recordGameResult(difficulty: selectedDifficulty, stars: result.stars)
 
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+            Task { [sound, haptics] in
+                try? await Task.sleep(for: .milliseconds(300))
                 if completed > 0 {
-                    self?.sound.playGameWin()
-                    self?.haptics.gameWin()
+                    sound.playGameWin()
+                    haptics.gameWin()
                 } else {
-                    self?.sound.playGameLose()
-                    self?.haptics.gameLose()
+                    sound.playGameLose()
+                    haptics.gameLose()
                 }
             }
         }

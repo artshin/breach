@@ -1,6 +1,16 @@
 import Foundation
 
 enum PathFinder {
+    /// Context for recursive path search
+    private struct SearchContext {
+        let codes: [String]
+        let grid: [[Cell]]
+        var position: Position
+        var isHorizontal: Bool
+        var usedCells: Set<Position>
+        var movesRemaining: Int
+    }
+
     /// Check if a sequence can still be completed from the current game state
     static func canCompleteSequence(
         sequence: TargetSequence,
@@ -10,97 +20,76 @@ enum PathFinder {
         movesRemaining: Int,
         grid: [[Cell]]
     ) -> Bool {
-        // Already complete
         if sequence.isComplete { return true }
 
-        // Not enough moves for remaining codes
         let remainingCodes = sequence.codes.count - sequence.matchedCount
         if movesRemaining < remainingCodes { return false }
 
-        return canComplete(
+        var context = SearchContext(
             codes: Array(sequence.codes.dropFirst(sequence.matchedCount)),
-            codeIndex: 0,
+            grid: grid,
             position: currentPosition,
             isHorizontal: isHorizontal,
             usedCells: usedCells,
-            movesRemaining: movesRemaining,
-            grid: grid,
-            memo: NSMutableDictionary()
+            movesRemaining: movesRemaining
         )
+
+        return canComplete(context: &context, codeIndex: 0)
     }
 
-    private static func canComplete(
-        codes: [String],
-        codeIndex: Int,
-        position: Position,
-        isHorizontal: Bool,
-        usedCells: Set<Position>,
-        movesRemaining: Int,
-        grid: [[Cell]],
-        memo: NSMutableDictionary
-    ) -> Bool {
-        // Base case: all codes found
-        if codeIndex >= codes.count { return true }
+    private static func canComplete(context: inout SearchContext, codeIndex: Int) -> Bool {
+        if codeIndex >= context.codes.count { return true }
+        if context.movesRemaining <= 0 { return false }
+        if context.movesRemaining < (context.codes.count - codeIndex) { return false }
 
-        // Base case: no moves left
-        if movesRemaining <= 0 { return false }
-
-        // Pruning: not enough moves for remaining codes
-        if movesRemaining < (codes.count - codeIndex) { return false }
-
-        // Get candidates in current constraint
         let candidates = getCandidates(
-            position: position,
-            isHorizontal: isHorizontal,
-            usedCells: usedCells,
-            grid: grid
+            position: context.position,
+            isHorizontal: context.isHorizontal,
+            usedCells: context.usedCells,
+            grid: context.grid
         )
 
         if candidates.isEmpty { return false }
 
-        let neededCode = codes[codeIndex]
-
-        // Try cells that match the needed code first (more likely to succeed)
-        // Include wildcards as matching cells
+        let neededCode = context.codes[codeIndex]
         let matchingCells = candidates.filter { matchesCode($0, neededCode: neededCode) }
         let nonMatchingCells = candidates.filter { !matchesCode($0, neededCode: neededCode) }
 
+        // Save state for backtracking
+        let savedPosition = context.position
+        let savedIsHorizontal = context.isHorizontal
+        let savedMovesRemaining = context.movesRemaining
+
         for cell in matchingCells {
-            var newUsed = usedCells
-            newUsed.insert(cell.position)
+            context.usedCells.insert(cell.position)
+            context.position = cell.position
+            context.isHorizontal = !savedIsHorizontal
+            context.movesRemaining = savedMovesRemaining - 1
 
-            if canComplete(
-                codes: codes,
-                codeIndex: codeIndex + 1,
-                position: cell.position,
-                isHorizontal: !isHorizontal,
-                usedCells: newUsed,
-                movesRemaining: movesRemaining - 1,
-                grid: grid,
-                memo: memo
-            ) {
+            if canComplete(context: &context, codeIndex: codeIndex + 1) {
                 return true
             }
+
+            context.usedCells.remove(cell.position)
         }
 
-        // Try positioning moves (don't advance sequence but might enable path)
         for cell in nonMatchingCells {
-            var newUsed = usedCells
-            newUsed.insert(cell.position)
+            context.usedCells.insert(cell.position)
+            context.position = cell.position
+            context.isHorizontal = !savedIsHorizontal
+            context.movesRemaining = savedMovesRemaining - 1
 
-            if canComplete(
-                codes: codes,
-                codeIndex: codeIndex,
-                position: cell.position,
-                isHorizontal: !isHorizontal,
-                usedCells: newUsed,
-                movesRemaining: movesRemaining - 1,
-                grid: grid,
-                memo: memo
-            ) {
+            if canComplete(context: &context, codeIndex: codeIndex) {
                 return true
             }
+
+            context.usedCells.remove(cell.position)
         }
+
+        // Restore state
+        context.position = savedPosition
+        context.isHorizontal = savedIsHorizontal
+        context.movesRemaining = savedMovesRemaining
 
         return false
     }
@@ -115,19 +104,15 @@ enum PathFinder {
         var candidates: [Cell] = []
 
         if isHorizontal {
-            // All cells in the current row
             for col in 0..<grid[position.row].count {
                 let cell = grid[position.row][col]
-                // Skip used cells and blocked cells
                 if !usedCells.contains(cell.position), !cell.isBlocked {
                     candidates.append(cell)
                 }
             }
         } else {
-            // All cells in the current column
             for row in 0..<grid.count {
                 let cell = grid[row][position.col]
-                // Skip used cells and blocked cells
                 if !usedCells.contains(cell.position), !cell.isBlocked {
                     candidates.append(cell)
                 }
@@ -139,7 +124,6 @@ enum PathFinder {
 
     /// Check if a cell matches the needed code (handles wildcards)
     private static func matchesCode(_ cell: Cell, neededCode: String) -> Bool {
-        // Wildcards match any code
         if cell.isWildcard {
             return true
         }
@@ -156,10 +140,8 @@ enum PathFinder {
     ) -> Set<Position> {
         var advancingPositions: Set<Position> = []
 
-        // Get next needed codes from all incomplete sequences
         let nextNeededCodes = Set(sequences.compactMap(\.nextNeededCode))
 
-        // Get valid cells in current constraint
         let candidates = getCandidates(
             position: currentPosition,
             isHorizontal: isHorizontal,
@@ -168,7 +150,6 @@ enum PathFinder {
         )
 
         for cell in candidates {
-            // Wildcards always advance sequences (if there are incomplete sequences)
             if cell.isWildcard, !nextNeededCodes.isEmpty {
                 advancingPositions.insert(cell.position)
             } else if nextNeededCodes.contains(cell.code) {

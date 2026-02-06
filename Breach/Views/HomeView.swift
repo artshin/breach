@@ -1,15 +1,21 @@
 import SwiftUI
 
 struct HomeView: View {
+    enum Sheet: Identifiable {
+        case settings, stats, tutorial
+
+        var id: String {
+            "\(self)"
+        }
+    }
+
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
     @ObservedObject private var settings = GameSettings.shared
     @ObservedObject private var tutorialManager = TutorialManager.shared
     @State private var selectedDifficulty: Difficulty = .easy
     @State private var showingGame = false
     @State private var showingGridRush = false
-    @State private var showingSettings = false
-    @State private var showingStats = false
-    @State private var showingTutorial = false
+    @State private var activeSheet: Sheet?
 
     private var isWideLayout: Bool {
         horizontalSizeClass == .regular
@@ -52,18 +58,19 @@ struct HomeView: View {
         .navigationDestination(isPresented: $showingGridRush) {
             GridRushView()
         }
-        .sheet(isPresented: $showingSettings) {
-            SettingsView()
-        }
-        .sheet(isPresented: $showingStats) {
-            StatsView()
-        }
-        .fullScreenCover(isPresented: $showingTutorial) {
-            TutorialView(onComplete: {})
+        .sheet(item: $activeSheet) { sheet in
+            switch sheet {
+            case .settings:
+                SettingsView()
+            case .stats:
+                StatsView()
+            case .tutorial:
+                TutorialView(onComplete: {})
+            }
         }
         .onAppear {
             if tutorialManager.shouldShowTutorial {
-                showingTutorial = true
+                activeSheet = .tutorial
             }
         }
     }
@@ -174,11 +181,11 @@ struct HomeView: View {
     private var bottomSection: some View {
         HStack(spacing: BreachSpacing.lg) {
             BreachIconButton("chart.bar") {
-                showingStats = true
+                activeSheet = .stats
             }
 
             BreachIconButton("gearshape") {
-                showingSettings = true
+                activeSheet = .settings
             }
         }
     }

@@ -14,13 +14,20 @@ class GridRushViewModel: ObservableObject, GamePlayable {
     // MARK: - Private Properties
 
     private var timer: Timer?
-    private let sound = SoundManager.shared
-    private let haptics = HapticsManager.shared
-    private let settings = GameSettings.shared
+    private let sound: SoundManager
+    private let haptics: HapticsManager
+    private let settings: GameSettings
 
     // MARK: - Initialization
 
-    init() {
+    init(
+        sound: SoundManager = .shared,
+        haptics: HapticsManager = .shared,
+        settings: GameSettings = .shared
+    ) {
+        self.sound = sound
+        self.haptics = haptics
+        self.settings = settings
         rushState = GridRushState()
     }
 
@@ -251,7 +258,8 @@ class GridRushViewModel: ObservableObject, GamePlayable {
         sound.playGameWin()
         haptics.gameWin()
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
+        Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(1500))
             self?.showBonusAnimation = nil
             self?.loadNextGrid()
         }
@@ -263,7 +271,8 @@ class GridRushViewModel: ObservableObject, GamePlayable {
 
         rushState.currentGridNumber += 1
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+        Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(1000))
             self?.loadNextGrid()
         }
     }
