@@ -6,6 +6,7 @@ struct HomeView: View {
     @ObservedObject private var tutorialManager = TutorialManager.shared
     @State private var selectedDifficulty: Difficulty = .easy
     @State private var showingGame = false
+    @State private var showingGridRush = false
     @State private var showingSettings = false
     @State private var showingStats = false
     @State private var showingTutorial = false
@@ -34,7 +35,7 @@ struct HomeView: View {
 
                 Spacer()
 
-                // Play Button
+                // Play Buttons
                 playSection
 
                 Spacer()
@@ -47,6 +48,9 @@ struct HomeView: View {
         }
         .navigationDestination(isPresented: $showingGame) {
             GameView(difficulty: selectedDifficulty)
+        }
+        .navigationDestination(isPresented: $showingGridRush) {
+            GridRushView()
         }
         .sheet(isPresented: $showingSettings) {
             SettingsView()
@@ -143,11 +147,23 @@ struct HomeView: View {
 
     private var playSection: some View {
         VStack(spacing: BreachSpacing.md) {
+            // Standard Play
             BreachButton("INITIATE BREACH", color: BreachColors.cyan) {
                 showingGame = true
             }
 
-            Text("Buffer: \(selectedDifficulty.bufferSize) | Grid: \(selectedDifficulty.gridSize)x\(selectedDifficulty.gridSize)")
+            Text(
+                "Buffer: \(selectedDifficulty.bufferSize) | Grid: \(selectedDifficulty.gridSize)x\(selectedDifficulty.gridSize)"
+            )
+            .font(BreachTypography.caption(10))
+            .foregroundColor(BreachColors.textMuted)
+
+            // Grid Rush Mode
+            BreachOutlineButton("GRID RUSH", color: BreachColors.yellow) {
+                showingGridRush = true
+            }
+
+            Text("Timed mode • Clear grids for bonus time")
                 .font(BreachTypography.caption(10))
                 .foregroundColor(BreachColors.textMuted)
         }
@@ -175,7 +191,7 @@ struct DifficultyCard: View {
     let difficulty: Difficulty
     let isSelected: Bool
     let isLocked: Bool
-    var starsEarned: Int = 0
+    var starsEarned = 0
     let action: () -> Void
 
     private var isWide: Bool {
@@ -184,19 +200,19 @@ struct DifficultyCard: View {
 
     private var cardColor: Color {
         switch difficulty {
-        case .easy: return BreachColors.green
-        case .medium: return BreachColors.yellow
-        case .hard: return BreachColors.orange
-        case .expert: return BreachColors.red
+        case .easy: BreachColors.green
+        case .medium: BreachColors.yellow
+        case .hard: BreachColors.orange
+        case .expert: BreachColors.red
         }
     }
 
     private var difficultyIcon: String {
         switch difficulty {
-        case .easy: return "1.circle"
-        case .medium: return "2.circle"
-        case .hard: return "3.circle"
-        case .expert: return "4.circle"
+        case .easy: "1.circle"
+        case .medium: "2.circle"
+        case .hard: "3.circle"
+        case .expert: "4.circle"
         }
     }
 
@@ -214,7 +230,8 @@ struct DifficultyCard: View {
                         ForEach(0..<3, id: \.self) { i in
                             Image(systemName: i < min(starsEarned, 3) ? "star.fill" : "star")
                                 .font(.system(size: isWide ? 14 : 10))
-                                .foregroundColor(i < min(starsEarned, 3) ? .yellow : BreachColors.textMuted.opacity(0.3))
+                                .foregroundColor(i < min(starsEarned, 3) ? .yellow : BreachColors.textMuted
+                                    .opacity(0.3))
                         }
                     }
                 }
@@ -222,7 +239,8 @@ struct DifficultyCard: View {
                 // Name
                 Text(difficulty.displayName.uppercased())
                     .font(BreachTypography.caption(isWide ? 14 : 12))
-                    .foregroundColor(isLocked ? BreachColors.textMuted : (isSelected ? cardColor : BreachColors.textPrimary))
+                    .foregroundColor(isLocked ? BreachColors
+                        .textMuted : (isSelected ? cardColor : BreachColors.textPrimary))
 
                 // Stats or lock message
                 if isLocked {
@@ -245,7 +263,10 @@ struct DifficultyCard: View {
             .background(isSelected && !isLocked ? cardColor.opacity(0.15) : BreachColors.cardBackground)
             .overlay(
                 RoundedRectangle(cornerRadius: BreachRadius.md)
-                    .stroke(isSelected && !isLocked ? cardColor : BreachColors.borderSecondary, lineWidth: isSelected && !isLocked ? 2 : 1)
+                    .stroke(
+                        isSelected && !isLocked ? cardColor : BreachColors.borderSecondary,
+                        lineWidth: isSelected && !isLocked ? 2 : 1
+                    )
             )
             .cornerRadius(BreachRadius.md)
             .opacity(isLocked ? 0.6 : 1.0)

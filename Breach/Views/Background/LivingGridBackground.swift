@@ -8,7 +8,7 @@ struct LivingGridBackground: View {
     private let horizontalLineCount = 20
     private let verticalLineCount = 15
 
-    // State transition
+    /// State transition
     @State private var currentPalette: BackgroundPalette
 
     // Win/Loss effects
@@ -20,7 +20,7 @@ struct LivingGridBackground: View {
 
     init(state: BackgroundGameState) {
         self.state = state
-        self._currentPalette = State(initialValue: BackgroundPalette.forState(state))
+        _currentPalette = State(initialValue: BackgroundPalette.forState(state))
     }
 
     var body: some View {
@@ -74,11 +74,10 @@ struct LivingGridBackground: View {
         }
 
         // Apply flicker for loss state
-        let flickerMultiplier: Double
-        if case .loss = state {
-            flickerMultiplier = 0.5 + 0.5 * sin(time * 15)
+        let flickerMultiplier = if case .loss = state {
+            0.5 + 0.5 * sin(time * 15)
         } else {
-            flickerMultiplier = 1.0
+            1.0
         }
 
         // Draw horizontal lines with perspective
@@ -115,7 +114,7 @@ struct LivingGridBackground: View {
 
         // Draw vertical lines converging to vanishing point
         let groundWidth = size.width * 1.5
-        let startX = (size.width - groundWidth) / 2  // Center the spread
+        let startX = (size.width - groundWidth) / 2 // Center the spread
 
         for i in 0..<verticalLineCount {
             let normalizedIndex = Double(i) / Double(verticalLineCount - 1)

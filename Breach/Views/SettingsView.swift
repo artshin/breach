@@ -84,7 +84,7 @@ struct SettingsView: View {
         .presentationDetents([.large])
         .presentationDragIndicator(.visible)
         .alert("Reset Progress", isPresented: $showResetConfirmation) {
-            Button("Cancel", role: .cancel) { }
+            Button("Cancel", role: .cancel) {}
             Button("Reset", role: .destructive) {
                 settings.resetProgress()
             }
@@ -103,7 +103,9 @@ struct SettingsView: View {
 
             Spacer()
 
-            Button(action: { dismiss() }) {
+            Button {
+                dismiss()
+            } label: {
                 Image(systemName: "xmark")
                     .font(.system(size: 16, weight: .bold))
                     .foregroundColor(BreachColors.cyan)
@@ -119,12 +121,7 @@ struct SettingsView: View {
 
 struct SettingsSection<Content: View>: View {
     let title: String
-    let content: Content
-
-    init(title: String, @ViewBuilder content: () -> Content) {
-        self.title = title
-        self.content = content()
-    }
+    @ViewBuilder let content: Content
 
     var body: some View {
         VStack(alignment: .leading, spacing: BreachSpacing.sm) {
@@ -258,7 +255,10 @@ struct BackgroundStyleOption: View {
                     .cornerRadius(BreachRadius.sm)
                     .overlay(
                         RoundedRectangle(cornerRadius: BreachRadius.sm)
-                            .stroke(isSelected ? BreachColors.cyan : BreachColors.borderSecondary, lineWidth: isSelected ? 2 : 1)
+                            .stroke(
+                                isSelected ? BreachColors.cyan : BreachColors.borderSecondary,
+                                lineWidth: isSelected ? 2 : 1
+                            )
                     )
 
                 // Label and description

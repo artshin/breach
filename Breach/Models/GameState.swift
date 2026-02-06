@@ -12,16 +12,16 @@ enum GameResult: Equatable {
     var stars: Int {
         switch self {
         case .playing:
-            return 0
-        case .finished(let completed, let total, let moves, let par):
+            0
+        case let .finished(completed, total, moves, par):
             if completed == 0 {
-                return 0
+                0
             } else if completed < total {
-                return 1 // Partial
+                1 // Partial
             } else if moves <= par {
-                return 3 // Optimal
+                3 // Optimal
             } else {
-                return 2 // Full but not optimal
+                2 // Full but not optimal
             }
         }
     }
@@ -38,8 +38,8 @@ enum SelectionMode: Equatable {
 
     var constraintIndex: Int {
         switch self {
-        case .horizontal(let row): return row
-        case .vertical(let col): return col
+        case let .horizontal(row): row
+        case let .vertical(col): col
         }
     }
 }
@@ -55,23 +55,23 @@ struct GameState: Equatable {
     let par: Int
     let difficulty: Difficulty
 
-    // Track last selected position for pathfinding
+    /// Track last selected position for pathfinding
     var lastPosition: Position?
 
     init(puzzle: Puzzle) {
-        self.grid = puzzle.grid
-        self.bufferSize = puzzle.bufferSize
-        self.buffer = []
-        self.sequences = puzzle.sequences
-        self.selectionMode = .horizontal(row: 0)
-        self.gameResult = .playing
-        self.moveCount = 0
-        self.par = puzzle.par
-        self.difficulty = puzzle.difficulty
-        self.lastPosition = nil
+        grid = puzzle.grid
+        bufferSize = puzzle.bufferSize
+        buffer = []
+        sequences = puzzle.sequences
+        selectionMode = .horizontal(row: 0)
+        gameResult = .playing
+        moveCount = 0
+        par = puzzle.par
+        difficulty = puzzle.difficulty
+        lastPosition = nil
     }
 
-    // Convenience initializer for default game
+    /// Convenience initializer for default game
     init(difficulty: Difficulty = .easy) {
         let puzzle = PuzzleGenerator.generate(difficulty: difficulty)
         self.init(puzzle: puzzle)
@@ -92,10 +92,10 @@ struct GameState: Equatable {
     }
 
     var completedSequenceCount: Int {
-        sequences.filter { $0.isComplete }.count
+        sequences.filter(\.isComplete).count
     }
 
     var allSequencesComplete: Bool {
-        sequences.allSatisfy { $0.isComplete }
+        sequences.allSatisfy(\.isComplete)
     }
 }

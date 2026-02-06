@@ -39,10 +39,10 @@ struct Trace: Identifiable {
             let segmentLength = segments[i - 1].distance(to: segments[i])
             if accumulated + segmentLength >= targetDistance {
                 let remaining = targetDistance - accumulated
-                let t = remaining / segmentLength
+                let fraction = remaining / segmentLength
                 return CGPoint(
-                    x: segments[i - 1].x + (segments[i].x - segments[i - 1].x) * t,
-                    y: segments[i - 1].y + (segments[i].y - segments[i - 1].y) * t
+                    x: segments[i - 1].x + (segments[i].x - segments[i - 1].x) * fraction,
+                    y: segments[i - 1].y + (segments[i].y - segments[i - 1].y) * fraction
                 )
             }
             accumulated += segmentLength
@@ -72,13 +72,13 @@ struct CircuitTracesBackground: View {
     // Effect states
     @State private var shortCircuitIndex: Int = -1
     @State private var convergenceProgress: Double = 0
-    @State private var particleBurst: Bool = false
+    @State private var particleBurst = false
 
     private let reduceMotion = UIAccessibility.isReduceMotionEnabled
 
     init(state: BackgroundGameState) {
         self.state = state
-        self._currentPalette = State(initialValue: BackgroundPalette.forState(state))
+        _currentPalette = State(initialValue: BackgroundPalette.forState(state))
     }
 
     private var traceCount: (min: Int, max: Int) {
@@ -87,7 +87,7 @@ struct CircuitTracesBackground: View {
             return (8, 12)
         case .settings:
             return (4, 6)
-        case .game(let ratio):
+        case let .game(ratio):
             let base = 15
             let extra = Int(ratio * 10)
             return (base, base + extra)
@@ -99,28 +99,28 @@ struct CircuitTracesBackground: View {
     private var pulseSpeed: Double {
         switch state {
         case .menu:
-            return 30
+            30
         case .settings:
-            return 10
-        case .game(let ratio):
-            return 60 + ratio * 40
+            10
+        case let .game(ratio):
+            60 + ratio * 40
         case .win:
-            return 100
+            100
         case .loss:
-            return 20
+            20
         }
     }
 
     private var spawnInterval: TimeInterval {
         switch state {
         case .menu:
-            return 3.0
+            3.0
         case .settings:
-            return 6.0
-        case .game(let ratio):
-            return 2.0 - ratio * 1.0
+            6.0
+        case let .game(ratio):
+            2.0 - ratio * 1.0
         case .win, .loss:
-            return 1.0
+            1.0
         }
     }
 
@@ -199,7 +199,7 @@ struct CircuitTracesBackground: View {
         lastUpdateTime = relativeTime
 
         // Spawn new traces
-        if relativeTime - lastTraceTime > spawnInterval && traces.count < traceCount.max {
+        if relativeTime - lastTraceTime > spawnInterval, traces.count < traceCount.max {
             traces.append(generateTrace(in: size, relativeTime: relativeTime))
             lastTraceTime = relativeTime
         }
@@ -216,21 +216,21 @@ struct CircuitTracesBackground: View {
 
             // Update pulses
             updated.pulses = updated.pulses.compactMap { pulse in
-                var p = pulse
+                var updatedPulse = pulse
                 let totalLen = max(1, trace.totalLength)
-                p.position += pulse.speed * 0.033 / Double(totalLen)
-                p.position = min(1.0, p.position)
+                updatedPulse.position += pulse.speed * 0.033 / Double(totalLen)
+                updatedPulse.position = min(1.0, updatedPulse.position)
 
                 // Fade out at end
-                if p.position > 0.8 {
-                    p.opacity = (1.0 - p.position) / 0.2
+                if updatedPulse.position > 0.8 {
+                    updatedPulse.opacity = (1.0 - updatedPulse.position) / 0.2
                 }
 
-                return p.position < 1.0 ? p : nil
+                return updatedPulse.position < 1.0 ? updatedPulse : nil
             }
 
             // Add new pulses randomly
-            if updated.pulses.count < 3 && updated.growthProgress > 0.3 && Double.random(in: 0...1) < 0.03 {
+            if updated.pulses.count < 3, updated.growthProgress > 0.3, Double.random(in: 0...1) < 0.03 {
                 updated.pulses.append(Trace.Pulse(
                     position: 0,
                     opacity: 1.0,
@@ -252,17 +252,15 @@ struct CircuitTracesBackground: View {
 
         // Start from a random edge
         let edge = Int.random(in: 0..<4)
-        let startPoint: CGPoint
-
-        switch edge {
+        let startPoint = switch edge {
         case 0: // Top
-            startPoint = CGPoint(x: CGFloat.random(in: 0...size.width), y: 0)
+            CGPoint(x: CGFloat.random(in: 0...size.width), y: 0)
         case 1: // Right
-            startPoint = CGPoint(x: size.width, y: CGFloat.random(in: 0...size.height))
+            CGPoint(x: size.width, y: CGFloat.random(in: 0...size.height))
         case 2: // Bottom
-            startPoint = CGPoint(x: CGFloat.random(in: 0...size.width), y: size.height)
+            CGPoint(x: CGFloat.random(in: 0...size.width), y: size.height)
         default: // Left
-            startPoint = CGPoint(x: 0, y: CGFloat.random(in: 0...size.height))
+            CGPoint(x: 0, y: CGFloat.random(in: 0...size.height))
         }
 
         segments.append(startPoint)
@@ -381,11 +379,11 @@ struct CircuitTracesBackground: View {
 
             // Draw fading tail
             let tailCount = 5
-            for t in 1...tailCount {
-                let tailProgress = pulse.position - Double(t) * 0.02
+            for tailIndex in 1...tailCount {
+                let tailProgress = pulse.position - Double(tailIndex) * 0.02
                 guard tailProgress >= 0, let tailPoint = trace.pointAt(progress: tailProgress) else { continue }
 
-                let tailOpacity = pulse.opacity * (1.0 - Double(t) / Double(tailCount))
+                let tailOpacity = pulse.opacity * (1.0 - Double(tailIndex) / Double(tailCount))
                 context.fill(
                     Path(ellipseIn: CGRect(
                         x: tailPoint.x - 1.5,

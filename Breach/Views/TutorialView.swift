@@ -13,6 +13,7 @@ struct TutorialView: View {
 
     let onComplete: () -> Void
 
+    // swiftlint:disable line_length
     private let steps: [TutorialStep] = [
         TutorialStep(
             title: "WELCOME, NETRUNNER",
@@ -57,6 +58,7 @@ struct TutorialView: View {
             highlightColor: BreachColors.green
         )
     ]
+    // swiftlint:enable line_length
 
     var body: some View {
         ZStack {
@@ -87,7 +89,8 @@ struct TutorialView: View {
         HStack(spacing: BreachSpacing.xs) {
             ForEach(0..<steps.count, id: \.self) { index in
                 Capsule()
-                    .fill(index <= currentStep ? steps[currentStep].highlightColor : BreachColors.textMuted.opacity(0.3))
+                    .fill(index <= currentStep ? steps[currentStep].highlightColor : BreachColors.textMuted
+                        .opacity(0.3))
                     .frame(height: 4)
             }
         }
@@ -142,11 +145,11 @@ struct TutorialView: View {
 
             // Skip button
             if currentStep < steps.count - 1 {
-                Button(action: {
+                Button {
                     TutorialManager.shared.markTutorialComplete()
                     onComplete()
                     dismiss()
-                }) {
+                } label: {
                     Text("SKIP TUTORIAL")
                         .font(BreachTypography.caption())
                         .foregroundColor(BreachColors.textMuted)
@@ -168,7 +171,7 @@ class TutorialManager: ObservableObject {
     @Published var shouldShowTutorial: Bool
 
     private init() {
-        self.shouldShowTutorial = !UserDefaults.standard.bool(forKey: hasSeenTutorialKey)
+        shouldShowTutorial = !UserDefaults.standard.bool(forKey: hasSeenTutorialKey)
     }
 
     func markTutorialComplete() {

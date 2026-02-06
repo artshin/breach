@@ -10,18 +10,18 @@ struct GameView: View {
         _viewModel = StateObject(wrappedValue: GameViewModel(difficulty: difficulty))
     }
 
-    // Use side-by-side layout on iPad or landscape on larger phones
+    /// Use side-by-side layout on iPad or landscape on larger phones
     private var useWideLayout: Bool {
         horizontalSizeClass == .regular
     }
 
-    // Computed background state based on game result
+    /// Computed background state based on game result
     private var backgroundState: BackgroundGameState {
         switch viewModel.gameResult {
         case .playing:
             let bufferFillRatio = Double(viewModel.buffer.count) / Double(viewModel.bufferSize)
             return .game(bufferFillRatio: bufferFillRatio)
-        case .finished(_, _, _, _):
+        case .finished:
             if viewModel.gameResult.stars > 0 {
                 return .win
             } else {
@@ -117,7 +117,9 @@ struct GameView: View {
     private var headerSection: some View {
         HStack {
             // Back Button
-            Button(action: { dismiss() }) {
+            Button {
+                dismiss()
+            } label: {
                 HStack(spacing: BreachSpacing.xs) {
                     Image(systemName: "chevron.left")
                         .font(.system(size: 14, weight: .bold))
@@ -182,10 +184,10 @@ struct DifficultyBadge: View {
 
     private var badgeColor: Color {
         switch difficulty {
-        case .easy: return BreachColors.green
-        case .medium: return BreachColors.yellow
-        case .hard: return BreachColors.orange
-        case .expert: return BreachColors.red
+        case .easy: BreachColors.green
+        case .medium: BreachColors.yellow
+        case .hard: BreachColors.orange
+        case .expert: BreachColors.red
         }
     }
 

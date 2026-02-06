@@ -12,8 +12,8 @@ class GameViewModel: ObservableObject {
     private let settings = GameSettings.shared
 
     init(difficulty: Difficulty = .easy) {
-        self.selectedDifficulty = difficulty
-        self.gameState = GameState(difficulty: difficulty)
+        selectedDifficulty = difficulty
+        gameState = GameState(difficulty: difficulty)
     }
 
     var grid: [[Cell]] {
@@ -55,9 +55,9 @@ class GameViewModel: ObservableObject {
         guard !cell.isSelected else { return false }
 
         switch gameState.selectionMode {
-        case .horizontal(let row):
+        case let .horizontal(row):
             return cell.row == row
-        case .vertical(let col):
+        case let .vertical(col):
             return cell.col == col
         }
     }
@@ -68,7 +68,7 @@ class GameViewModel: ObservableObject {
 
         let nextNeededCodes = Set(gameState.sequences
             .filter { !$0.isComplete && !$0.isImpossible }
-            .compactMap { $0.nextNeededCode })
+            .compactMap(\.nextNeededCode))
 
         return nextNeededCodes.contains(cell.code)
     }
@@ -83,8 +83,8 @@ class GameViewModel: ObservableObject {
         haptics.cellSelected()
 
         // Store sequence states before update to detect changes
-        let previousCompletedCount = gameState.sequences.filter { $0.isComplete }.count
-        let previousMatchedCounts = gameState.sequences.map { $0.matchedCount }
+        let previousCompletedCount = gameState.sequences.filter(\.isComplete).count
+        let previousMatchedCounts = gameState.sequences.map(\.matchedCount)
 
         // Mark cell as selected
         gameState.grid[cell.row][cell.col].isSelected = true
@@ -108,8 +108,8 @@ class GameViewModel: ObservableObject {
         updateSequenceProgress()
 
         // Check for sequence progress feedback
-        let newCompletedCount = gameState.sequences.filter { $0.isComplete }.count
-        let newMatchedCounts = gameState.sequences.map { $0.matchedCount }
+        let newCompletedCount = gameState.sequences.filter(\.isComplete).count
+        let newMatchedCounts = gameState.sequences.map(\.matchedCount)
 
         // Check if any sequence was just completed
         if newCompletedCount > previousCompletedCount {
@@ -117,12 +117,11 @@ class GameViewModel: ObservableObject {
             haptics.sequenceComplete()
         } else {
             // Check if any sequence made progress
-            for i in 0..<gameState.sequences.count {
-                if newMatchedCounts[i] > previousMatchedCounts[i] {
-                    sound.playSequenceProgress()
-                    haptics.sequenceProgress()
-                    break
-                }
+            for i in 0..<gameState.sequences.count
+                where newMatchedCounts[i] > previousMatchedCounts[i] {
+                sound.playSequenceProgress()
+                haptics.sequenceProgress()
+                break
             }
         }
 
@@ -152,7 +151,7 @@ class GameViewModel: ObservableObject {
             let sequence = gameState.sequences[i]
 
             // Skip completed or impossible sequences
-            guard !sequence.isComplete && !sequence.isImpossible else { continue }
+            guard !sequence.isComplete, !sequence.isImpossible else { continue }
 
             // Check if latest code matches next needed
             if let nextCode = sequence.nextNeededCode, nextCode == latestCode {
@@ -168,7 +167,7 @@ class GameViewModel: ObservableObject {
             let sequence = gameState.sequences[i]
 
             // Skip completed or already marked impossible
-            guard !sequence.isComplete && !sequence.isImpossible else { continue }
+            guard !sequence.isComplete, !sequence.isImpossible else { continue }
 
             // Check if sequence can still be completed
             let canComplete = PathFinder.canCompleteSequence(
@@ -241,7 +240,7 @@ class GameViewModel: ObservableObject {
 
         // Check if all remaining sequences are impossible
         let remainingPossible = gameState.sequences.filter { !$0.isComplete && !$0.isImpossible }
-        if remainingPossible.isEmpty && !gameState.allSequencesComplete {
+        if remainingPossible.isEmpty, !gameState.allSequencesComplete {
             // All remaining sequences are impossible, game effectively over
             // But player can continue to try to complete already-progressed sequences
             // For now, we let them play until buffer is full
@@ -263,7 +262,7 @@ class GameViewModel: ObservableObject {
 
     func getHighlightedRow() -> Int? {
         guard !gameState.gameResult.isGameOver else { return nil }
-        if case .horizontal(let row) = gameState.selectionMode {
+        if case let .horizontal(row) = gameState.selectionMode {
             return row
         }
         return nil
@@ -271,7 +270,7 @@ class GameViewModel: ObservableObject {
 
     func getHighlightedColumn() -> Int? {
         guard !gameState.gameResult.isGameOver else { return nil }
-        if case .vertical(let col) = gameState.selectionMode {
+        if case let .vertical(col) = gameState.selectionMode {
             return col
         }
         return nil

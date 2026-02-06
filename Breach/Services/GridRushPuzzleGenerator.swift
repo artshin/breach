@@ -1,27 +1,29 @@
 import Foundation
 
-enum PuzzleGenerator {
-    static func generate(difficulty: Difficulty) -> Puzzle {
+/// Generates puzzles specifically for Grid Rush mode with special cell types
+enum GridRushPuzzleGenerator {
+    /// Generate a puzzle for a specific Grid Rush stage
+    static func generate(stage: GridRushStage) -> Puzzle {
         var attempts = 0
         let maxAttempts = 100
 
         while attempts < maxAttempts {
             attempts += 1
 
-            if let puzzle = tryGenerate(difficulty: difficulty) {
+            if let puzzle = tryGenerate(stage: stage) {
                 return puzzle
             }
         }
 
         // Fallback: return a simple valid puzzle
-        return generateFallback(difficulty: difficulty)
+        return generateFallback(stage: stage)
     }
 
-    private static func tryGenerate(difficulty: Difficulty) -> Puzzle? {
-        let gridSize = difficulty.gridSize
+    private static func tryGenerate(stage: GridRushStage) -> Puzzle? {
+        let gridSize = stage.gridSize
 
         // Step 1: Design sequences with overlaps
-        let (sequences, mergedPath) = designSequences(difficulty: difficulty)
+        let (sequences, mergedPath) = designSequences(stage: stage)
 
         // Step 2: Generate solution path through grid
         guard let (partialGrid, solutionPath) = placeSolutionPath(
@@ -32,27 +34,50 @@ enum PuzzleGenerator {
         }
 
         // Step 3: Fill remaining cells
-        let grid = fillRemainingCells(
+        var grid = fillRemainingCells(
             grid: partialGrid,
             solutionPath: solutionPath,
             mergedPath: mergedPath
         )
 
-        // Step 4: Create target sequences
+        // Step 4: Place blockers (avoiding solution path)
+        grid = placeBlockers(
+            grid: grid,
+            solutionPath: solutionPath,
+            count: Int.random(in: stage.blockerCount)
+        )
+
+        // Step 5: Place wildcard cells (based on chance)
+        grid = placeWildcards(
+            grid: grid,
+            solutionPath: solutionPath,
+            chance: stage.wildcardChance
+        )
+
+        // Step 6: Place decay cells
+        grid = placeDecayCells(
+            grid: grid,
+            solutionPath: solutionPath,
+            count: stage.decayCellCount
+        )
+
+        // Step 7: Create target sequences
         let targetSequences = sequences.map { codes in
             TargetSequence(codes: codes)
         }
 
+        let bufferSize = GridRushConfig.bufferSize(for: stage)
+
         let puzzle = Puzzle(
             grid: grid,
             sequences: targetSequences,
-            bufferSize: difficulty.bufferSize,
+            bufferSize: bufferSize,
             par: mergedPath.count,
-            difficulty: difficulty,
+            difficulty: .medium, // Grid Rush uses its own difficulty system
             solutionPath: solutionPath
         )
 
-        // Step 5: Validate
+        // Step 8: Validate
         if validatePuzzle(puzzle) {
             return puzzle
         }
@@ -62,26 +87,17 @@ enum PuzzleGenerator {
 
     // MARK: - Sequence Design
 
-    private static func designSequences(difficulty: Difficulty) -> (sequences: [[String]], merged: [String]) {
+    private static func designSequences(stage: GridRushStage) -> (sequences: [[String]], merged: [String]) {
         let codes = Cell.availableCodes
+        let count = stage.sequenceCount
 
-        switch difficulty {
-        case .easy:
-            // Single sequence, no overlap needed
-            let seq = (0..<3).map { _ in codes.randomElement()! }
+        if count == 1 {
+            let seq = (0..<GridRushConfig.sequenceLength).map { _ in codes.randomElement()! }
             return ([seq], seq)
-
-        case .medium:
-            // Two sequences with suffix-prefix overlap
-            return designOverlappingSequences(count: 2, overlapSize: 2, codes: codes)
-
-        case .hard:
-            // Two sequences with smaller overlap
+        } else if count == 2 {
             return designOverlappingSequences(count: 2, overlapSize: 1, codes: codes)
-
-        case .expert:
-            // Three sequences with chained overlaps
-            return designChainedSequences(count: 3, codes: codes)
+        } else {
+            return designChainedSequences(count: count, codes: codes)
         }
     }
 
@@ -90,15 +106,9 @@ enum PuzzleGenerator {
         overlapSize: Int,
         codes: [String]
     ) -> (sequences: [[String]], merged: [String]) {
-        // Create first sequence
-        let seq1 = (0..<3).map { _ in codes.randomElement()! }
-
-        // Create second sequence that overlaps with first
-        // Last `overlapSize` codes of seq1 = first `overlapSize` codes of seq2
+        let seq1 = (0..<GridRushConfig.sequenceLength).map { _ in codes.randomElement()! }
         let overlap = Array(seq1.suffix(overlapSize))
-        let seq2 = overlap + (0..<(3 - overlapSize)).map { _ in codes.randomElement()! }
-
-        // Merged path: seq1 + remaining of seq2
+        let seq2 = overlap + (0..<(GridRushConfig.sequenceLength - overlapSize)).map { _ in codes.randomElement()! }
         let merged = seq1 + Array(seq2.dropFirst(overlapSize))
 
         return ([seq1, seq2], merged)
@@ -108,9 +118,6 @@ enum PuzzleGenerator {
         count: Int,
         codes: [String]
     ) -> (sequences: [[String]], merged: [String]) {
-        // Create chained sequences: A-B-C, B-C-D, C-D-E
-        // Merged: A-B-C-D-E
-
         var allCodes: [String] = []
         for _ in 0..<(2 + count) {
             allCodes.append(codes.randomElement()!)
@@ -118,7 +125,7 @@ enum PuzzleGenerator {
 
         var sequences: [[String]] = []
         for i in 0..<count {
-            let seq = Array(allCodes[i..<(i + 3)])
+            let seq = Array(allCodes[i..<(i + GridRushConfig.sequenceLength)])
             sequences.append(seq)
         }
 
@@ -131,7 +138,6 @@ enum PuzzleGenerator {
         mergedPath: [String],
         gridSize: Int
     ) -> (grid: [[Cell]], path: [Position])? {
-        // Initialize empty grid
         var grid: [[Cell?]] = Array(
             repeating: Array(repeating: nil, count: gridSize),
             count: gridSize
@@ -140,20 +146,16 @@ enum PuzzleGenerator {
         var path: [Position] = []
         var usedPositions: Set<Position> = []
 
-        // Start in row 0 (horizontal constraint for first move)
         var isHorizontal = true
         var currentRow = 0
         var currentCol = Int.random(in: 0..<gridSize)
 
         for code in mergedPath {
-            // Find a valid position
             let position: Position
 
             if path.isEmpty {
-                // First move: must be in row 0
                 position = Position(row: 0, col: currentCol)
             } else {
-                // Find available positions in current constraint
                 var candidates: [Position] = []
 
                 if isHorizontal {
@@ -173,24 +175,21 @@ enum PuzzleGenerator {
                 }
 
                 guard let chosen = candidates.randomElement() else {
-                    return nil // No valid position available
+                    return nil
                 }
                 position = chosen
             }
 
-            // Place the code
             let cell = Cell(code: code, row: position.row, col: position.col)
             grid[position.row][position.col] = cell
             path.append(position)
             usedPositions.insert(position)
 
-            // Update constraints for next move
             currentRow = position.row
             currentCol = position.col
             isHorizontal.toggle()
         }
 
-        // Convert to non-optional grid (fill nulls temporarily)
         let partialGrid = grid.enumerated().map { rowIndex, row in
             row.enumerated().map { colIndex, cell in
                 cell ?? Cell(code: "", row: rowIndex, col: colIndex)
@@ -217,9 +216,6 @@ enum PuzzleGenerator {
                 let position = Position(row: row, col: col)
 
                 if !solutionPositions.contains(position) {
-                    // Fill with a random code
-                    // For simplicity, just use random codes
-                    // More sophisticated: avoid codes that create shortcuts
                     let code = codes.randomElement()!
                     filledGrid[row][col] = Cell(code: code, row: row, col: col)
                 }
@@ -229,13 +225,122 @@ enum PuzzleGenerator {
         return filledGrid
     }
 
+    // MARK: - Special Cell Placement
+
+    private static func placeBlockers(
+        grid: [[Cell]],
+        solutionPath: [Position],
+        count: Int
+    ) -> [[Cell]] {
+        guard count > 0 else { return grid }
+
+        var modifiedGrid = grid
+        let solutionPositions = Set(solutionPath)
+        var availablePositions: [Position] = []
+
+        // Collect positions not on solution path
+        for row in 0..<grid.count {
+            for col in 0..<grid[row].count {
+                let pos = Position(row: row, col: col)
+                if !solutionPositions.contains(pos) {
+                    availablePositions.append(pos)
+                }
+            }
+        }
+
+        // Shuffle and take up to count positions
+        availablePositions.shuffle()
+        let blockerPositions = Array(availablePositions.prefix(count))
+
+        for pos in blockerPositions {
+            modifiedGrid[pos.row][pos.col] = Cell(
+                code: "XX",
+                row: pos.row,
+                col: pos.col,
+                cellType: .blocker
+            )
+        }
+
+        return modifiedGrid
+    }
+
+    private static func placeWildcards(
+        grid: [[Cell]],
+        solutionPath: [Position],
+        chance: Double
+    ) -> [[Cell]] {
+        guard chance > 0 else { return grid }
+
+        var modifiedGrid = grid
+        let solutionPositions = Set(solutionPath)
+
+        for row in 0..<grid.count {
+            for col in 0..<grid[row].count {
+                let pos = Position(row: row, col: col)
+                // Can place wildcards even on solution path (they help!)
+                // But skip blockers
+                if !modifiedGrid[row][col].isBlocked {
+                    if Double.random(in: 0...1) < chance, !solutionPositions.contains(pos) {
+                        let originalCode = modifiedGrid[row][col].code
+                        modifiedGrid[row][col] = Cell(
+                            code: originalCode,
+                            row: row,
+                            col: col,
+                            cellType: .wildcard
+                        )
+                    }
+                }
+            }
+        }
+
+        return modifiedGrid
+    }
+
+    private static func placeDecayCells(
+        grid: [[Cell]],
+        solutionPath: [Position],
+        count: Int
+    ) -> [[Cell]] {
+        guard count > 0 else { return grid }
+
+        var modifiedGrid = grid
+        let solutionPositions = Set(solutionPath)
+        var availablePositions: [Position] = []
+
+        // Collect positions not on solution path and not already special
+        for row in 0..<grid.count {
+            for col in 0..<grid[row].count {
+                let pos = Position(row: row, col: col)
+                let cell = grid[row][col]
+                if !solutionPositions.contains(pos), !cell.isBlocked, !cell.isWildcard {
+                    availablePositions.append(pos)
+                }
+            }
+        }
+
+        availablePositions.shuffle()
+        let decayPositions = Array(availablePositions.prefix(count))
+
+        for pos in decayPositions {
+            let originalCode = modifiedGrid[pos.row][pos.col].code
+            // Decay cells change after 3-5 moves
+            let movesUntilDecay = Int.random(in: 3...5)
+            modifiedGrid[pos.row][pos.col] = Cell(
+                code: originalCode,
+                row: pos.row,
+                col: pos.col,
+                cellType: .decay(movesRemaining: movesUntilDecay)
+            )
+        }
+
+        return modifiedGrid
+    }
+
     // MARK: - Validation
 
     private static func validatePuzzle(_ puzzle: Puzzle) -> Bool {
-        // Check that the solution path actually works
         guard puzzle.solutionPath.count == puzzle.par else { return false }
 
-        // Simulate following the solution path
         var buffer: [String] = []
         var isHorizontal = true
         var lastPosition: Position?
@@ -243,9 +348,10 @@ enum PuzzleGenerator {
         for (index, position) in puzzle.solutionPath.enumerated() {
             let cell = puzzle.grid[position.row][position.col]
 
-            // Verify constraint
+            // Verify cell is not blocked
+            if cell.isBlocked { return false }
+
             if index == 0 {
-                // First move must be row 0
                 guard position.row == 0 else { return false }
             } else if let last = lastPosition {
                 if isHorizontal {
@@ -260,7 +366,6 @@ enum PuzzleGenerator {
             isHorizontal.toggle()
         }
 
-        // Verify all sequences can be completed with this buffer
         for sequence in puzzle.sequences
             where !bufferContainsSequence(buffer: buffer, sequence: sequence.codes) {
             return false
@@ -282,34 +387,24 @@ enum PuzzleGenerator {
 
     // MARK: - Fallback
 
-    private static func generateFallback(difficulty: Difficulty) -> Puzzle {
-        // Generate a simple guaranteed-solvable puzzle
-        let gridSize = difficulty.gridSize
+    private static func generateFallback(stage: GridRushStage) -> Puzzle {
+        let gridSize = stage.gridSize
         let codes = Cell.availableCodes
 
-        // Simple sequence
-        let sequence = (0..<3).map { _ in codes.randomElement()! }
+        let sequence = (0..<GridRushConfig.sequenceLength).map { _ in codes.randomElement()! }
 
-        // Place sequence in a straight line from (0,0)
         var grid: [[Cell]] = []
         var path: [Position] = []
 
         for row in 0..<gridSize {
             var rowCells: [Cell] = []
             for col in 0..<gridSize {
-                let code: String = if row == 0, col < sequence.count, col < gridSize {
-                    // Special case: place first code at (0, col) where we'll select it
-                    codes.randomElement()!
-                } else {
-                    codes.randomElement()!
-                }
+                let code = codes.randomElement()!
                 rowCells.append(Cell(code: code, row: row, col: col))
             }
             grid.append(rowCells)
         }
 
-        // Override with solution path
-        // Path: (0,0) -> (1,0) -> (1,1) -> (2,1)... alternating
         var isHorizontal = true
         var currentRow = 0
         var currentCol = 0
@@ -319,7 +414,6 @@ enum PuzzleGenerator {
             grid[currentRow][currentCol] = Cell(code: code, row: currentRow, col: currentCol)
             path.append(position)
 
-            // Move for next code
             if isHorizontal {
                 currentCol = min(currentCol + 1, gridSize - 1)
             } else {
@@ -328,12 +422,14 @@ enum PuzzleGenerator {
             isHorizontal.toggle()
         }
 
+        let bufferSize = GridRushConfig.bufferSize(for: stage)
+
         return Puzzle(
             grid: grid,
             sequences: [TargetSequence(codes: sequence)],
-            bufferSize: difficulty.bufferSize,
+            bufferSize: bufferSize,
             par: sequence.count,
-            difficulty: difficulty,
+            difficulty: .medium,
             solutionPath: path
         )
     }

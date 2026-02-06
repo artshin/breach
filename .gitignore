@@ -51,3 +51,6 @@ playground.xcworkspace
 # Temporary files
 *.tmp
 *.temp
+
+# Build analysis
+release-build-analysis/

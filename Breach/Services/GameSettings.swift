@@ -3,16 +3,26 @@ import SwiftUI
 
 /// Per-difficulty statistics
 struct DifficultyStats: Codable, Equatable {
-    var gamesPlayed: Int = 0
-    var gamesWon: Int = 0 // At least 1 star
-    var totalStars: Int = 0
-    var bestStreak: Int = 0
-    var currentStreak: Int = 0
+    var gamesPlayed = 0
+    var gamesWon = 0 // At least 1 star
+    var totalStars = 0
+    var bestStreak = 0
+    var currentStreak = 0
 
     var winRate: Double {
         guard gamesPlayed > 0 else { return 0 }
         return Double(gamesWon) / Double(gamesPlayed)
     }
+}
+
+/// Grid Rush mode statistics
+struct GridRushStats: Codable, Equatable {
+    var totalRuns = 0
+    var bestGridsCleared = 0
+    var highScore = 0
+    var totalGridsCleared = 0
+    var bestPerfectStreak = 0
+    var totalPerfectClears = 0
 }
 
 /// Centralized settings manager for the game
@@ -22,11 +32,11 @@ class GameSettings: ObservableObject {
 
     // MARK: - Audio Settings
 
-    @Published var soundEnabled: Bool = true {
+    @Published var soundEnabled = true {
         didSet { save() }
     }
 
-    @Published var hapticsEnabled: Bool = true {
+    @Published var hapticsEnabled = true {
         didSet { save() }
     }
 
@@ -43,6 +53,10 @@ class GameSettings: ObservableObject {
     // MARK: - Per-Difficulty Statistics
 
     @Published var difficultyStats: [Difficulty: DifficultyStats] = [:]
+
+    // MARK: - Grid Rush Statistics
+
+    @Published var gridRushStats = GridRushStats()
 
     // MARK: - Computed Statistics
 
@@ -62,7 +76,7 @@ class GameSettings: ObservableObject {
     }
 
     var bestOverallStreak: Int {
-        difficultyStats.values.map { $0.bestStreak }.max() ?? 0
+        difficultyStats.values.map(\.bestStreak).max() ?? 0
     }
 
     // MARK: - Persistence Keys
@@ -73,6 +87,7 @@ class GameSettings: ObservableObject {
         static let backgroundStyle = "settings.backgroundStyle"
         static let unlockedDifficulties = "settings.unlockedDifficulties"
         static let difficultyStats = "stats.difficultyStats"
+        static let gridRushStats = "stats.gridRushStats"
     }
 
     // MARK: - Init
@@ -117,6 +132,12 @@ class GameSettings: ObservableObject {
             )
         }
 
+        // Load Grid Rush stats
+        if let data = defaults.data(forKey: Keys.gridRushStats),
+           let decoded = try? JSONDecoder().decode(GridRushStats.self, from: data) {
+            gridRushStats = decoded
+        }
+
         // Ensure easy is always unlocked
         unlockedDifficulties.insert(.easy)
     }
@@ -128,7 +149,7 @@ class GameSettings: ObservableObject {
         defaults.set(backgroundStyle.rawValue, forKey: Keys.backgroundStyle)
 
         // Save unlocked difficulties
-        let difficultyStrings = Set(unlockedDifficulties.map { $0.rawValue })
+        let difficultyStrings = Set(unlockedDifficulties.map(\.rawValue))
         if let data = try? JSONEncoder().encode(difficultyStrings) {
             defaults.set(data, forKey: Keys.unlockedDifficulties)
         }
@@ -139,6 +160,11 @@ class GameSettings: ObservableObject {
         )
         if let data = try? JSONEncoder().encode(statsDict) {
             defaults.set(data, forKey: Keys.difficultyStats)
+        }
+
+        // Save Grid Rush stats
+        if let data = try? JSONEncoder().encode(gridRushStats) {
+            defaults.set(data, forKey: Keys.gridRushStats)
         }
     }
 
@@ -188,11 +214,38 @@ class GameSettings: ObservableObject {
         save()
     }
 
+    // MARK: - Grid Rush Statistics Methods
+
+    func recordGridRushResult(gridsCompleted: Int, score: Int, perfectClears: Int) {
+        gridRushStats.totalRuns += 1
+        gridRushStats.totalGridsCleared += gridsCompleted
+        gridRushStats.totalPerfectClears += perfectClears
+
+        // Update bests
+        if gridsCompleted > gridRushStats.bestGridsCleared {
+            gridRushStats.bestGridsCleared = gridsCompleted
+        }
+
+        if score > gridRushStats.highScore {
+            gridRushStats.highScore = score
+        }
+
+        save()
+    }
+
+    func updateBestPerfectStreak(_ streak: Int) {
+        if streak > gridRushStats.bestPerfectStreak {
+            gridRushStats.bestPerfectStreak = streak
+            save()
+        }
+    }
+
     // MARK: - Reset
 
     func resetProgress() {
         unlockedDifficulties = [.easy]
         difficultyStats = [:]
+        gridRushStats = GridRushStats()
         save()
     }
 

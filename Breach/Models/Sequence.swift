@@ -7,7 +7,7 @@ struct TargetSequence: Identifiable, Equatable {
     var isImpossible: Bool
 
     init(codes: [String], matchedCount: Int = 0, isImpossible: Bool = false) {
-        self.id = UUID()
+        id = UUID()
         self.codes = codes
         self.matchedCount = matchedCount
         self.isImpossible = isImpossible

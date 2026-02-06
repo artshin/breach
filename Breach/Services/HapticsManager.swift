@@ -1,12 +1,14 @@
-import UIKit
 import SwiftUI
+import UIKit
 
 /// Manages haptic feedback throughout the game
 @MainActor
 class HapticsManager: ObservableObject {
     static let shared = HapticsManager()
 
-    private var settings: GameSettings { GameSettings.shared }
+    private var settings: GameSettings {
+        GameSettings.shared
+    }
 
     // Haptic generators
     private let lightGenerator = UIImpactFeedbackGenerator(style: .light)

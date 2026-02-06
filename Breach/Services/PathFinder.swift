@@ -1,7 +1,6 @@
 import Foundation
 
-struct PathFinder {
-
+enum PathFinder {
     /// Check if a sequence can still be completed from the current game state
     static func canCompleteSequence(
         sequence: TargetSequence,
@@ -62,8 +61,9 @@ struct PathFinder {
         let neededCode = codes[codeIndex]
 
         // Try cells that match the needed code first (more likely to succeed)
-        let matchingCells = candidates.filter { $0.code == neededCode }
-        let nonMatchingCells = candidates.filter { $0.code != neededCode }
+        // Include wildcards as matching cells
+        let matchingCells = candidates.filter { matchesCode($0, neededCode: neededCode) }
+        let nonMatchingCells = candidates.filter { !matchesCode($0, neededCode: neededCode) }
 
         for cell in matchingCells {
             var newUsed = usedCells
@@ -105,6 +105,7 @@ struct PathFinder {
         return false
     }
 
+    /// Get valid candidate cells from current position, excluding blocked cells
     private static func getCandidates(
         position: Position,
         isHorizontal: Bool,
@@ -117,7 +118,8 @@ struct PathFinder {
             // All cells in the current row
             for col in 0..<grid[position.row].count {
                 let cell = grid[position.row][col]
-                if !usedCells.contains(cell.position) {
+                // Skip used cells and blocked cells
+                if !usedCells.contains(cell.position), !cell.isBlocked {
                     candidates.append(cell)
                 }
             }
@@ -125,13 +127,23 @@ struct PathFinder {
             // All cells in the current column
             for row in 0..<grid.count {
                 let cell = grid[row][position.col]
-                if !usedCells.contains(cell.position) {
+                // Skip used cells and blocked cells
+                if !usedCells.contains(cell.position), !cell.isBlocked {
                     candidates.append(cell)
                 }
             }
         }
 
         return candidates
+    }
+
+    /// Check if a cell matches the needed code (handles wildcards)
+    private static func matchesCode(_ cell: Cell, neededCode: String) -> Bool {
+        // Wildcards match any code
+        if cell.isWildcard {
+            return true
+        }
+        return cell.code == neededCode
     }
 
     /// Find all positions that would advance any of the given sequences
@@ -145,7 +157,7 @@ struct PathFinder {
         var advancingPositions: Set<Position> = []
 
         // Get next needed codes from all incomplete sequences
-        let nextNeededCodes = Set(sequences.compactMap { $0.nextNeededCode })
+        let nextNeededCodes = Set(sequences.compactMap(\.nextNeededCode))
 
         // Get valid cells in current constraint
         let candidates = getCandidates(
@@ -156,7 +168,10 @@ struct PathFinder {
         )
 
         for cell in candidates {
-            if nextNeededCodes.contains(cell.code) {
+            // Wildcards always advance sequences (if there are incomplete sequences)
+            if cell.isWildcard, !nextNeededCodes.isEmpty {
+                advancingPositions.insert(cell.position)
+            } else if nextNeededCodes.contains(cell.code) {
                 advancingPositions.insert(cell.position)
             }
         }

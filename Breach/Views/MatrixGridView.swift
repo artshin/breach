@@ -7,7 +7,7 @@ struct MatrixGridView: View {
     private let spacing: CGFloat = 4
     private let padding: CGFloat = 8
 
-    // Calculate cell size based on grid size and device
+    /// Calculate cell size based on grid size and device
     private func cellSize(for availableWidth: CGFloat) -> CGFloat {
         let gridSize = viewModel.grid.count
         let totalSpacing = spacing * CGFloat(gridSize - 1) + (padding * 2)
@@ -25,7 +25,8 @@ struct MatrixGridView: View {
 
         GeometryReader { geo in
             let size = cellSize(for: geo.size.width)
-            let gridWidth = CGFloat(viewModel.grid.count) * size + CGFloat(viewModel.grid.count - 1) * spacing + padding * 2
+            let gridWidth = CGFloat(viewModel.grid.count) * size + CGFloat(viewModel.grid.count - 1) * spacing +
+                padding * 2
 
             VStack(spacing: spacing) {
                 ForEach(0..<viewModel.grid.count, id: \.self) { row in
@@ -58,6 +59,68 @@ struct MatrixGridView: View {
     }
 }
 
+// MARK: - Grid Rush Matrix Grid View
+
+struct GridRushMatrixGridView: View {
+    @ObservedObject var viewModel: GridRushViewModel
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass
+
+    private let spacing: CGFloat = 4
+    private let padding: CGFloat = 8
+
+    private func cellSize(for availableWidth: CGFloat) -> CGFloat {
+        let gridSize = viewModel.grid.count
+        guard gridSize > 0 else { return 50 }
+        let totalSpacing = spacing * CGFloat(gridSize - 1) + (padding * 2)
+        let calculatedSize = (availableWidth - totalSpacing) / CGFloat(gridSize)
+
+        let minSize: CGFloat = 44
+        let maxSize: CGFloat = horizontalSizeClass == .regular ? 80 : 60
+
+        return min(max(calculatedSize, minSize), maxSize)
+    }
+
+    var body: some View {
+        let advancingPositions = viewModel.advancingPositions()
+
+        GeometryReader { geo in
+            let size = cellSize(for: geo.size.width)
+            let gridCount = viewModel.grid.count
+            let gridWidth = CGFloat(gridCount) * size + CGFloat(max(0, gridCount - 1)) * spacing + padding * 2
+
+            VStack(spacing: spacing) {
+                ForEach(0..<viewModel.grid.count, id: \.self) { row in
+                    HStack(spacing: spacing) {
+                        ForEach(viewModel.grid[row]) { cell in
+                            CellView(
+                                cell: cell,
+                                cellSize: size,
+                                isValid: viewModel.isValidSelection(cell: cell),
+                                advancesSequence: advancingPositions.contains(cell.position),
+                                isHighlightedRow: viewModel.getHighlightedRow() == cell.row,
+                                isHighlightedCol: viewModel.getHighlightedColumn() == cell.col,
+                                onTap: {
+                                    viewModel.selectCell(cell)
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+            .padding(padding)
+            .background(
+                RoundedRectangle(cornerRadius: BreachRadius.sm)
+                    .stroke(BreachColors.borderSecondary, lineWidth: 1)
+            )
+            .frame(width: gridWidth)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .aspectRatio(1.0, contentMode: .fit)
+    }
+}
+
+// MARK: - Cell View
+
 struct CellView: View {
     let cell: Cell
     let cellSize: CGFloat
@@ -70,8 +133,8 @@ struct CellView: View {
     @State private var isPressed = false
 
     var body: some View {
-        Button(action: {
-            // Trigger tap animation
+        Button {
+            guard !cell.isBlocked else { return }
             withAnimation(.easeOut(duration: 0.1)) {
                 isPressed = true
             }
@@ -81,41 +144,82 @@ struct CellView: View {
                 }
             }
             onTap()
-        }) {
-            Text(cell.code)
-                .font(.system(size: cellSize > 50 ? 18 : 16, weight: .bold, design: .monospaced))
-                .foregroundColor(textColor)
-                .frame(width: cellSize, height: cellSize)
-                .background(backgroundColor)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 4)
-                        .stroke(borderColor, lineWidth: borderWidth)
-                )
-                .cornerRadius(4)
-                .shadow(color: shadowColor, radius: shadowRadius)
+        } label: {
+            ZStack {
+                // Cell content
+                if cell.isBlocked {
+                    // Blocker cell: X icon
+                    Image(systemName: "xmark")
+                        .font(.system(size: cellSize > 50 ? 20 : 16, weight: .bold))
+                        .foregroundColor(BreachColors.red.opacity(0.7))
+                } else if cell.isWildcard {
+                    // Wildcard cell: ?? with shimmer effect
+                    Text("??")
+                        .font(.system(size: cellSize > 50 ? 18 : 16, weight: .bold, design: .monospaced))
+                        .foregroundColor(BreachColors.pink)
+                } else if let decayMoves = cell.decayMovesRemaining {
+                    // Decay cell: code with countdown
+                    VStack(spacing: 0) {
+                        Text(cell.code)
+                            .font(.system(size: cellSize > 50 ? 14 : 12, weight: .bold, design: .monospaced))
+                            .foregroundColor(textColor)
+                        Text("\(decayMoves)")
+                            .font(.system(size: cellSize > 50 ? 10 : 8, weight: .bold, design: .monospaced))
+                            .foregroundColor(BreachColors.orange)
+                    }
+                } else {
+                    // Normal cell
+                    Text(cell.displayCode)
+                        .font(.system(size: cellSize > 50 ? 18 : 16, weight: .bold, design: .monospaced))
+                        .foregroundColor(textColor)
+                }
+            }
+            .frame(width: cellSize, height: cellSize)
+            .background(backgroundColor)
+            .overlay(
+                RoundedRectangle(cornerRadius: 4)
+                    .stroke(borderColor, lineWidth: borderWidth)
+            )
+            .cornerRadius(4)
+            .shadow(color: shadowColor, radius: shadowRadius)
         }
         .scaleEffect(isPressed ? 0.9 : 1.0)
-        .opacity(cell.isSelected ? 0.5 : 1.0)
+        .opacity(cell.isSelected ? 0.5 : (cell.isBlocked ? 0.6 : 1.0))
         .animation(.easeInOut(duration: 0.2), value: cell.isSelected)
-        .disabled(cell.isSelected || !isValid)
+        .disabled(cell.isSelected || !isValid || cell.isBlocked)
         .accessibilityLabel(accessibilityLabel)
         .accessibilityHint(accessibilityHint)
     }
 
     private var accessibilityLabel: String {
+        if cell.isBlocked {
+            return "Blocked cell, row \(cell.row + 1), column \(cell.col + 1)"
+        }
+        if cell.isWildcard {
+            return "Wildcard cell, row \(cell.row + 1), column \(cell.col + 1)"
+        }
         var label = "Code \(cell.code), row \(cell.row + 1), column \(cell.col + 1)"
         if cell.isSelected {
             label += ", already selected"
+        }
+        if let decayMoves = cell.decayMovesRemaining {
+            label += ", decays in \(decayMoves) moves"
         }
         return label
     }
 
     private var accessibilityHint: String {
+        if cell.isBlocked {
+            return "This cell is blocked and cannot be selected"
+        }
         if cell.isSelected {
             return "This cell has already been used"
         }
         if !isValid {
             return "Not available, must select from current row or column"
+        }
+        if cell.isWildcard {
+            return "Wildcard matches any sequence code"
         }
         if advancesSequence {
             return "Selecting this advances a target sequence"
@@ -127,7 +231,13 @@ struct CellView: View {
         if cell.isSelected {
             return .gray.opacity(0.5)
         }
-        if advancesSequence && isValid {
+        if cell.isWildcard {
+            return BreachColors.pink
+        }
+        if cell.isDecay {
+            return BreachColors.orange
+        }
+        if advancesSequence, isValid {
             return .yellow
         }
         if isValid {
@@ -137,8 +247,17 @@ struct CellView: View {
     }
 
     private var backgroundColor: Color {
+        if cell.isBlocked {
+            return BreachColors.red.opacity(0.1)
+        }
         if cell.isSelected {
             return Color.gray.opacity(0.2)
+        }
+        if cell.isWildcard {
+            return BreachColors.pink.opacity(0.15)
+        }
+        if cell.isDecay {
+            return BreachColors.orange.opacity(0.1)
         }
         if advancesSequence && isValid {
             return Color.yellow.opacity(0.15)
@@ -153,10 +272,19 @@ struct CellView: View {
     }
 
     private var borderColor: Color {
+        if cell.isBlocked {
+            return BreachColors.red.opacity(0.5)
+        }
         if cell.isSelected {
             return .gray.opacity(0.3)
         }
-        if advancesSequence && isValid {
+        if cell.isWildcard {
+            return BreachColors.pink
+        }
+        if cell.isDecay {
+            return BreachColors.orange.opacity(0.7)
+        }
+        if advancesSequence, isValid {
             return .yellow
         }
         if isValid {
@@ -166,21 +294,30 @@ struct CellView: View {
     }
 
     private var borderWidth: CGFloat {
-        if advancesSequence && isValid {
+        if cell.isWildcard, isValid {
+            return 2.5
+        }
+        if advancesSequence, isValid {
             return 2.5
         }
         return isValid ? 2 : 1
     }
 
     private var shadowColor: Color {
-        if advancesSequence && isValid {
+        if cell.isWildcard, isValid {
+            return BreachColors.pink.opacity(0.5)
+        }
+        if advancesSequence, isValid {
             return .yellow.opacity(0.5)
         }
         return .clear
     }
 
     private var shadowRadius: CGFloat {
-        advancesSequence && isValid ? 6 : 0
+        if cell.isWildcard, isValid {
+            return 6
+        }
+        return advancesSequence && isValid ? 6 : 0
     }
 }
 

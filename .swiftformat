@@ -1,0 +1,100 @@
+# SwiftFormat Configuration for Breach
+# Matches existing project conventions
+
+# Swift version
+--swiftversion 5.9
+
+# ─── Indentation & Whitespace ──────────────────────────────────────────
+
+--indent 4
+--tabwidth 4
+--smarttabs disabled
+--indentcase false
+--ifdef no-indent
+--xcodeindentation disabled
+
+# ─── Wrapping ──────────────────────────────────────────────────────────
+
+--maxwidth 120
+--wraparguments before-first
+--wrapparameters before-first
+--wrapcollections before-first
+--wrapconditions after-first
+--wrapreturntype preserve
+--wraptypealiases preserve
+--closingparen balanced
+
+# ─── Braces ────────────────────────────────────────────────────────────
+
+--allman false
+
+# ─── Spacing ───────────────────────────────────────────────────────────
+
+--operatorfunc spaced
+--nospaceoperators ...,..<
+--ranges spaced
+--trimwhitespace always
+
+# ─── Blank Lines ───────────────────────────────────────────────────────
+
+--emptybraces no-space
+--typeblanklines remove
+
+# ─── Semicolons ────────────────────────────────────────────────────────
+
+--semicolons never
+
+# ─── Imports ───────────────────────────────────────────────────────────
+
+--importgrouping alpha
+
+# ─── Trailing Commas ──────────────────────────────────────────────────
+
+--commas inline
+
+# ─── Redundancy ────────────────────────────────────────────────────────
+
+--self remove
+--selfrequired
+--redundanttype inferred
+
+# ─── Stripping ─────────────────────────────────────────────────────────
+
+--stripunusedargs closure-only
+
+# ─── Void ──────────────────────────────────────────────────────────────
+
+--voidtype void
+
+# ─── Marks ─────────────────────────────────────────────────────────────
+
+--marktypes never
+--markextensions always
+--extensionmark "MARK: - %t + %c"
+--groupedextension "MARK: %c"
+
+# ─── Header ────────────────────────────────────────────────────────────
+
+--header strip
+
+# ─── Exclusions ────────────────────────────────────────────────────────
+
+--exclude build,DerivedData,.build,Pods,Carthage
+
+# ─── Disabled Rules ───────────────────────────────────────────────────
+--disable wrapMultilineStatementBraces
+
+# ─── Enabled Rules ────────────────────────────────────────────────────
+
+--enable isEmpty
+--enable sortImports
+--enable anyObjectProtocol
+--enable duplicateImports
+--enable redundantInit
+--enable redundantLet
+--enable redundantNilInit
+--enable redundantParens
+--enable redundantReturn
+--enable redundantVoidReturnType
+--enable strongOutlets
+--enable trailingSpace

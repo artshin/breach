@@ -65,7 +65,10 @@ struct SequenceRowView: View {
                     .font(.system(size: 12))
                     .foregroundColor(.green)
                     .scaleEffect(checkmarkScale)
-                    .shadow(color: showCompletionGlow ? .green.opacity(0.8) : .clear, radius: showCompletionGlow ? 8 : 0)
+                    .shadow(
+                        color: showCompletionGlow ? .green.opacity(0.8) : .clear,
+                        radius: showCompletionGlow ? 8 : 0
+                    )
             } else if sequence.isImpossible {
                 Image(systemName: "xmark.circle.fill")
                     .font(.system(size: 12))
@@ -113,59 +116,59 @@ struct SequenceRowView: View {
 
     private var statusIcon: String {
         if sequence.isComplete {
-            return "checkmark.circle.fill"
+            "checkmark.circle.fill"
         } else if sequence.isImpossible {
-            return "xmark.circle"
+            "xmark.circle"
         } else if sequence.matchedCount > 0 {
-            return "circle.lefthalf.filled"
+            "circle.lefthalf.filled"
         } else {
-            return "circle"
+            "circle"
         }
     }
 
     private var statusColor: Color {
         if sequence.isComplete {
-            return .green
+            .green
         } else if sequence.isImpossible {
-            return .red.opacity(0.5)
+            .red.opacity(0.5)
         } else if sequence.matchedCount > 0 {
-            return .yellow
+            .yellow
         } else {
-            return .cyan.opacity(0.5)
+            .cyan.opacity(0.5)
         }
     }
 
     private func codeColor(at index: Int) -> Color {
         if sequence.isComplete {
-            return .green
+            .green
         } else if sequence.isImpossible {
-            return .gray
+            .gray
         } else if index < sequence.matchedCount {
-            return .green
+            .green
         } else if index == sequence.matchedCount {
-            return .yellow
+            .yellow
         } else {
-            return .pink
+            .pink
         }
     }
 
     private var separatorColor: Color {
         if sequence.isComplete {
-            return .green.opacity(0.5)
+            .green.opacity(0.5)
         } else if sequence.isImpossible {
-            return .gray.opacity(0.3)
+            .gray.opacity(0.3)
         } else {
-            return .cyan.opacity(0.3)
+            .cyan.opacity(0.3)
         }
     }
 
     private var progressColor: Color {
         if sequence.isComplete {
-            return .green
+            .green
         } else if sequence.isImpossible {
-            return .gray
+            .gray
         } else {
-            return .cyan.opacity(0.7)
+            .cyan.opacity(0.7)
         }
     }
 
@@ -184,7 +187,7 @@ struct SequenceRowView: View {
     }
 }
 
-// Keep legacy SequenceView for compatibility
+/// Keep legacy SequenceView for compatibility
 struct SequenceView: View {
     let sequence: TargetSequence
 

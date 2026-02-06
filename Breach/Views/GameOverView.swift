@@ -3,18 +3,25 @@ import SwiftUI
 struct GameOverView: View {
     let result: GameResult
     let onNewGame: () -> Void
-    var onHome: (() -> Void)? = nil
+    var onHome: (() -> Void)?
 
     // Animation states
     @State private var showBackground = false
     @State private var showContent = false
     @State private var showButtons = false
 
-    private var resultData: (completed: Int, total: Int, moves: Int, par: Int) {
-        if case .finished(let completed, let total, let moves, let par) = result {
-            return (completed, total, moves, par)
+    private struct ResultData {
+        let completed: Int
+        let total: Int
+        let moves: Int
+        let par: Int
+    }
+
+    private var resultData: ResultData {
+        if case let .finished(completed, total, moves, par) = result {
+            return ResultData(completed: completed, total: total, moves: moves, par: par)
         }
-        return (0, 0, 0, 0)
+        return ResultData(completed: 0, total: 0, moves: 0, par: 0)
     }
 
     private var stars: Int {
@@ -112,7 +119,7 @@ struct GameOverView: View {
                             .cornerRadius(BreachRadius.sm)
                     }
 
-                    if let onHome = onHome {
+                    if let onHome {
                         Button(action: onHome) {
                             Text("HOME")
                                 .font(BreachTypography.caption())
@@ -143,37 +150,37 @@ struct GameOverView: View {
 
     private var titleText: String {
         switch stars {
-        case 3: return "OPTIMAL BREACH"
-        case 2: return "ACCESS GRANTED"
-        case 1: return "PARTIAL BREACH"
-        default: return "BREACH FAILED"
+        case 3: "OPTIMAL BREACH"
+        case 2: "ACCESS GRANTED"
+        case 1: "PARTIAL BREACH"
+        default: "BREACH FAILED"
         }
     }
 
     private var titleColor: Color {
         switch stars {
-        case 3: return .yellow
-        case 2: return .green
-        case 1: return .orange
-        default: return .red
+        case 3: .yellow
+        case 2: .green
+        case 1: .orange
+        default: .red
         }
     }
 
     private var subtitleText: String {
         switch stars {
-        case 3: return "Perfect execution!\nAll sequences at or under par."
-        case 2: return "All sequences completed.\nCan you do it faster?"
-        case 1: return "Partial success.\nTry to complete all sequences."
-        default: return "No sequences completed.\nPlan your path carefully."
+        case 3: "Perfect execution!\nAll sequences at or under par."
+        case 2: "All sequences completed.\nCan you do it faster?"
+        case 1: "Partial success.\nTry to complete all sequences."
+        default: "No sequences completed.\nPlan your path carefully."
         }
     }
 
     private var buttonColor: Color {
         switch stars {
-        case 3: return .yellow
-        case 2: return .green
-        case 1: return .orange
-        default: return .cyan
+        case 3: .yellow
+        case 2: .green
+        case 1: .orange
+        default: .cyan
         }
     }
 }

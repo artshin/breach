@@ -7,7 +7,9 @@ class SoundManager: ObservableObject {
     static let shared = SoundManager()
 
     private var audioPlayers: [SoundEffect: AVAudioPlayer] = [:]
-    private var settings: GameSettings { GameSettings.shared }
+    private var settings: GameSettings {
+        GameSettings.shared
+    }
 
     enum SoundEffect: String, CaseIterable {
         case cellSelect = "cell_select"
@@ -57,23 +59,21 @@ class SoundManager: ObservableObject {
     }
 
     private func playSystemSound(for effect: SoundEffect) {
-        let soundID: SystemSoundID
-
-        switch effect {
+        let soundID: SystemSoundID = switch effect {
         case .cellSelect:
-            soundID = 1104 // Tock
+            1104 // Tock
         case .sequenceProgress:
-            soundID = 1057 // Pop
+            1057 // Pop
         case .sequenceComplete:
-            soundID = 1025 // New mail
+            1025 // New mail
         case .sequenceFailed:
-            soundID = 1053 // Error
+            1053 // Error
         case .gameWin:
-            soundID = 1025 // Fanfare
+            1025 // Fanfare
         case .gameLose:
-            soundID = 1053 // Sad
+            1053 // Sad
         case .buttonTap:
-            soundID = 1104 // Tock
+            1104 // Tock
         }
 
         AudioServicesPlaySystemSound(soundID)

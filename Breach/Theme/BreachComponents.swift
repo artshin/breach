@@ -92,11 +92,7 @@ struct BreachIconButton: View {
 // MARK: - Panel Container
 
 struct BreachPanel<Content: View>: View {
-    let content: Content
-
-    init(@ViewBuilder content: () -> Content) {
-        self.content = content()
-    }
+    @ViewBuilder let content: Content
 
     var body: some View {
         content
@@ -178,7 +174,7 @@ struct GlowingText: View {
 // MARK: - Scanline Overlay
 
 struct ScanlineOverlay: View {
-    var includeVignette: Bool = false
+    var includeVignette = false
 
     var body: some View {
         GeometryReader { geo in
