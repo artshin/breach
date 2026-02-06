@@ -2,7 +2,7 @@ import Foundation
 import SwiftUI
 
 @MainActor
-class GameViewModel: ObservableObject {
+class GameViewModel: ObservableObject, GamePlayable {
     @Published var gameState: GameState
     @Published var selectedDifficulty: Difficulty = .easy
 
@@ -62,38 +62,21 @@ class GameViewModel: ObservableObject {
         }
     }
 
-    /// Returns true if this cell would advance any sequence
-    func cellAdvancesSequence(cell: Cell) -> Bool {
-        guard isValidSelection(cell: cell) else { return false }
-
-        let nextNeededCodes = Set(gameState.sequences
-            .filter { !$0.isComplete && !$0.isImpossible }
-            .compactMap(\.nextNeededCode))
-
-        return nextNeededCodes.contains(cell.code)
-    }
-
     // MARK: - Cell Selection
 
     func selectCell(_ cell: Cell) {
         guard isValidSelection(cell: cell) else { return }
 
-        // Play cell selection feedback
         sound.playCellSelect()
         haptics.cellSelected()
 
-        // Store sequence states before update to detect changes
         let previousCompletedCount = gameState.sequences.filter(\.isComplete).count
         let previousMatchedCounts = gameState.sequences.map(\.matchedCount)
 
         // Mark cell as selected
         gameState.grid[cell.row][cell.col].isSelected = true
-
-        // Add code to buffer
         gameState.buffer.append(cell.code)
         gameState.moveCount += 1
-
-        // Update last position
         gameState.lastPosition = cell.position
 
         // Toggle selection mode
@@ -105,90 +88,51 @@ class GameViewModel: ObservableObject {
         }
 
         // Update sequence progress
-        updateSequenceProgress()
+        GameEngine.updateSequenceProgress(
+            sequences: &gameState.sequences,
+            latestCode: cell.code,
+            isWildcard: false
+        )
 
-        // Check for sequence progress feedback
+        // Play feedback
         let newCompletedCount = gameState.sequences.filter(\.isComplete).count
         let newMatchedCounts = gameState.sequences.map(\.matchedCount)
 
-        // Check if any sequence was just completed
-        if newCompletedCount > previousCompletedCount {
-            sound.playSequenceComplete()
-            haptics.sequenceComplete()
-        } else {
-            // Check if any sequence made progress
-            for i in 0..<gameState.sequences.count
-                where newMatchedCounts[i] > previousMatchedCounts[i] {
-                sound.playSequenceProgress()
-                haptics.sequenceProgress()
-                break
-            }
-        }
+        GameEngine.playSequenceFeedback(
+            previousCompletedCount: previousCompletedCount,
+            newCompletedCount: newCompletedCount,
+            previousMatchedCounts: previousMatchedCounts,
+            newMatchedCounts: newMatchedCounts,
+            sound: sound,
+            haptics: haptics
+        )
 
-        // Check feasibility of remaining sequences
-        updateSequenceFeasibility()
+        // Check feasibility
+        let movesRemaining = gameState.bufferSize - gameState.buffer.count
+        GameEngine.updateSequenceFeasibility(
+            sequences: &gameState.sequences,
+            currentPosition: gameState.currentPosition,
+            isHorizontal: gameState.selectionMode.isHorizontal,
+            usedCells: gameState.usedCells,
+            movesRemaining: movesRemaining,
+            grid: gameState.grid
+        )
 
         // Check for newly impossible sequences
         let newlyImpossible = gameState.sequences.filter { $0.isImpossible && !$0.isComplete }
         if !newlyImpossible.isEmpty {
-            // Delay slightly to not conflict with progress sounds
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { [weak self] in
                 self?.sound.playSequenceFailed()
                 self?.haptics.sequenceFailed()
             }
         }
 
-        // Check game result
         checkGameResult()
-    }
-
-    // MARK: - Sequence Progress
-
-    private func updateSequenceProgress() {
-        let latestCode = gameState.buffer.last
-
-        for i in 0..<gameState.sequences.count {
-            let sequence = gameState.sequences[i]
-
-            // Skip completed or impossible sequences
-            guard !sequence.isComplete, !sequence.isImpossible else { continue }
-
-            // Check if latest code matches next needed
-            if let nextCode = sequence.nextNeededCode, nextCode == latestCode {
-                gameState.sequences[i].matchedCount += 1
-            }
-        }
-    }
-
-    private func updateSequenceFeasibility() {
-        let movesRemaining = gameState.bufferSize - gameState.buffer.count
-
-        for i in 0..<gameState.sequences.count {
-            let sequence = gameState.sequences[i]
-
-            // Skip completed or already marked impossible
-            guard !sequence.isComplete, !sequence.isImpossible else { continue }
-
-            // Check if sequence can still be completed
-            let canComplete = PathFinder.canCompleteSequence(
-                sequence: sequence,
-                currentPosition: gameState.currentPosition,
-                isHorizontal: gameState.selectionMode.isHorizontal,
-                usedCells: gameState.usedCells,
-                movesRemaining: movesRemaining,
-                grid: gameState.grid
-            )
-
-            if !canComplete {
-                gameState.sequences[i].isImpossible = true
-            }
-        }
     }
 
     // MARK: - Game Result
 
     private func checkGameResult() {
-        // Check if all sequences are complete
         if gameState.allSequencesComplete {
             let result: GameResult = .finished(
                 completedSequences: gameState.sequences.count,
@@ -197,11 +141,8 @@ class GameViewModel: ObservableObject {
                 par: gameState.par
             )
             gameState.gameResult = result
-
-            // Record stats
             settings.recordGameResult(difficulty: selectedDifficulty, stars: result.stars)
 
-            // Play win feedback with delay to let sequence complete sound finish
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
                 self?.sound.playGameWin()
                 self?.haptics.gameWin()
@@ -209,7 +150,6 @@ class GameViewModel: ObservableObject {
             return
         }
 
-        // Check if buffer is full
         if gameState.buffer.count >= gameState.bufferSize {
             let completed = gameState.completedSequenceCount
             let result: GameResult = .finished(
@@ -219,31 +159,17 @@ class GameViewModel: ObservableObject {
                 par: gameState.par
             )
             gameState.gameResult = result
-
-            // Record stats
             settings.recordGameResult(difficulty: selectedDifficulty, stars: result.stars)
 
-            // Play appropriate feedback
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
                 if completed > 0 {
-                    // Partial success
                     self?.sound.playGameWin()
                     self?.haptics.gameWin()
                 } else {
-                    // Complete failure
                     self?.sound.playGameLose()
                     self?.haptics.gameLose()
                 }
             }
-            return
-        }
-
-        // Check if all remaining sequences are impossible
-        let remainingPossible = gameState.sequences.filter { !$0.isComplete && !$0.isImpossible }
-        if remainingPossible.isEmpty, !gameState.allSequencesComplete {
-            // All remaining sequences are impossible, game effectively over
-            // But player can continue to try to complete already-progressed sequences
-            // For now, we let them play until buffer is full
         }
     }
 
@@ -276,7 +202,6 @@ class GameViewModel: ObservableObject {
         return nil
     }
 
-    /// Get all positions that would advance any sequence
     func advancingPositions() -> Set<Position> {
         guard !gameState.gameResult.isGameOver else { return [] }
 

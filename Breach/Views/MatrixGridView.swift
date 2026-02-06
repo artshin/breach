@@ -1,68 +1,7 @@
 import SwiftUI
 
-struct MatrixGridView: View {
-    @ObservedObject var viewModel: GameViewModel
-    @Environment(\.horizontalSizeClass) var horizontalSizeClass
-
-    private let spacing: CGFloat = 4
-    private let padding: CGFloat = 8
-
-    /// Calculate cell size based on grid size and device
-    private func cellSize(for availableWidth: CGFloat) -> CGFloat {
-        let gridSize = viewModel.grid.count
-        let totalSpacing = spacing * CGFloat(gridSize - 1) + (padding * 2)
-        let calculatedSize = (availableWidth - totalSpacing) / CGFloat(gridSize)
-
-        // Clamp between min and max sizes
-        let minSize: CGFloat = 44 // Minimum touch target
-        let maxSize: CGFloat = horizontalSizeClass == .regular ? 80 : 60
-
-        return min(max(calculatedSize, minSize), maxSize)
-    }
-
-    var body: some View {
-        let advancingPositions = viewModel.advancingPositions()
-
-        GeometryReader { geo in
-            let size = cellSize(for: geo.size.width)
-            let gridWidth = CGFloat(viewModel.grid.count) * size + CGFloat(viewModel.grid.count - 1) * spacing +
-                padding * 2
-
-            VStack(spacing: spacing) {
-                ForEach(0..<viewModel.grid.count, id: \.self) { row in
-                    HStack(spacing: spacing) {
-                        ForEach(viewModel.grid[row]) { cell in
-                            CellView(
-                                cell: cell,
-                                cellSize: size,
-                                isValid: viewModel.isValidSelection(cell: cell),
-                                advancesSequence: advancingPositions.contains(cell.position),
-                                isHighlightedRow: viewModel.getHighlightedRow() == cell.row,
-                                isHighlightedCol: viewModel.getHighlightedColumn() == cell.col,
-                                onTap: {
-                                    viewModel.selectCell(cell)
-                                }
-                            )
-                        }
-                    }
-                }
-            }
-            .padding(padding)
-            .background(
-                RoundedRectangle(cornerRadius: BreachRadius.sm)
-                    .stroke(BreachColors.borderSecondary, lineWidth: 1)
-            )
-            .frame(width: gridWidth)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-        }
-        .aspectRatio(1.0, contentMode: .fit)
-    }
-}
-
-// MARK: - Grid Rush Matrix Grid View
-
-struct GridRushMatrixGridView: View {
-    @ObservedObject var viewModel: GridRushViewModel
+struct MatrixGridView<VM: GamePlayable>: View {
+    @ObservedObject var viewModel: VM
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
 
     private let spacing: CGFloat = 4
@@ -86,7 +25,8 @@ struct GridRushMatrixGridView: View {
         GeometryReader { geo in
             let size = cellSize(for: geo.size.width)
             let gridCount = viewModel.grid.count
-            let gridWidth = CGFloat(gridCount) * size + CGFloat(max(0, gridCount - 1)) * spacing + padding * 2
+            let gridWidth = CGFloat(gridCount) * size
+                + CGFloat(max(0, gridCount - 1)) * spacing + padding * 2
 
             VStack(spacing: spacing) {
                 ForEach(0..<viewModel.grid.count, id: \.self) { row in
@@ -146,31 +86,38 @@ struct CellView: View {
             onTap()
         } label: {
             ZStack {
-                // Cell content
                 if cell.isBlocked {
-                    // Blocker cell: X icon
                     Image(systemName: "xmark")
                         .font(.system(size: cellSize > 50 ? 20 : 16, weight: .bold))
                         .foregroundColor(BreachColors.red.opacity(0.7))
                 } else if cell.isWildcard {
-                    // Wildcard cell: ?? with shimmer effect
                     Text("??")
                         .font(.system(size: cellSize > 50 ? 18 : 16, weight: .bold, design: .monospaced))
                         .foregroundColor(BreachColors.pink)
                 } else if let decayMoves = cell.decayMovesRemaining {
-                    // Decay cell: code with countdown
                     VStack(spacing: 0) {
                         Text(cell.code)
-                            .font(.system(size: cellSize > 50 ? 14 : 12, weight: .bold, design: .monospaced))
+                            .font(.system(
+                                size: cellSize > 50 ? 14 : 12,
+                                weight: .bold,
+                                design: .monospaced
+                            ))
                             .foregroundColor(textColor)
                         Text("\(decayMoves)")
-                            .font(.system(size: cellSize > 50 ? 10 : 8, weight: .bold, design: .monospaced))
+                            .font(.system(
+                                size: cellSize > 50 ? 10 : 8,
+                                weight: .bold,
+                                design: .monospaced
+                            ))
                             .foregroundColor(BreachColors.orange)
                     }
                 } else {
-                    // Normal cell
                     Text(cell.displayCode)
-                        .font(.system(size: cellSize > 50 ? 18 : 16, weight: .bold, design: .monospaced))
+                        .font(.system(
+                            size: cellSize > 50 ? 18 : 16,
+                            weight: .bold,
+                            design: .monospaced
+                        ))
                         .foregroundColor(textColor)
                 }
             }

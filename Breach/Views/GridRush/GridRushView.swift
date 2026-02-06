@@ -35,7 +35,7 @@ struct GridRushView: View {
                         // iPad: Side-by-side layout
                         HStack(alignment: .top, spacing: BreachSpacing.lg) {
                             // Left: Grid
-                            GridRushMatrixGridView(viewModel: viewModel)
+                            MatrixGridView(viewModel: viewModel)
                                 .frame(maxWidth: 400)
 
                             // Right: Buffer and Sequences
@@ -63,7 +63,7 @@ struct GridRushView: View {
                             .padding(.horizontal, BreachSpacing.lg)
 
                             // Grid
-                            GridRushMatrixGridView(viewModel: viewModel)
+                            MatrixGridView(viewModel: viewModel)
                                 .padding(.horizontal, BreachSpacing.sm)
 
                             // Sequences
