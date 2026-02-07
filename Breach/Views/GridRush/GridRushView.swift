@@ -5,6 +5,7 @@ struct GridRushView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
     @EnvironmentObject private var backgroundState: BackgroundStateManager
+    @EnvironmentObject private var transitionManager: TransitionManager
 
     private var isWideLayout: Bool {
         horizontalSizeClass == .regular
@@ -97,7 +98,9 @@ struct GridRushView: View {
                         viewModel.startNewRun()
                     },
                     onGoHome: {
-                        dismiss()
+                        transitionManager.transition {
+                            dismiss()
+                        }
                     }
                 )
                 .transition(.opacity)
@@ -109,7 +112,9 @@ struct GridRushView: View {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button {
                     viewModel.pauseTimer()
-                    dismiss()
+                    transitionManager.transition {
+                        dismiss()
+                    }
                 } label: {
                     HStack(spacing: 4) {
                         Image(systemName: "chevron.left")
@@ -153,4 +158,5 @@ struct GridRushView: View {
         }
     }
     .environmentObject(BackgroundStateManager())
+    .environmentObject(TransitionManager())
 }

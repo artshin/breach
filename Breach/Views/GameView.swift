@@ -5,6 +5,7 @@ struct GameView: View {
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
     @Environment(\.verticalSizeClass) var verticalSizeClass
     @EnvironmentObject private var backgroundState: BackgroundStateManager
+    @EnvironmentObject private var transitionManager: TransitionManager
     @StateObject private var viewModel: GameViewModel
 
     init(difficulty: Difficulty) {
@@ -39,7 +40,7 @@ struct GameView: View {
                 GameOverView(
                     result: viewModel.gameResult,
                     onNewGame: { viewModel.newGame() },
-                    onHome: { dismiss() }
+                    onHome: { transitionManager.transition { dismiss() } }
                 )
             }
         }
@@ -114,7 +115,9 @@ struct GameView: View {
         HStack {
             // Back Button
             Button {
-                dismiss()
+                transitionManager.transition {
+                    dismiss()
+                }
             } label: {
                 HStack(spacing: BreachSpacing.xs) {
                     Image(systemName: "chevron.left")
@@ -209,4 +212,5 @@ struct DifficultyBadge: View {
         }
     }
     .environmentObject(BackgroundStateManager())
+    .environmentObject(TransitionManager())
 }

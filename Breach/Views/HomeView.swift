@@ -11,6 +11,7 @@ struct HomeView: View {
 
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
     @EnvironmentObject private var backgroundState: BackgroundStateManager
+    @EnvironmentObject private var transitionManager: TransitionManager
     @ObservedObject private var tutorialManager = TutorialManager.shared
     @State private var selectedMode: GameMode = .standard
     @State private var showModeConfig = false
@@ -162,8 +163,10 @@ struct HomeView: View {
     }
 
     private func navigateToMode(_ mode: GameMode) {
-        selectedMode = mode
-        showModeConfig = true
+        transitionManager.transition {
+            selectedMode = mode
+            showModeConfig = true
+        }
     }
 }
 
@@ -360,6 +363,7 @@ struct DifficultyCard: View {
         }
     }
     .environmentObject(BackgroundStateManager())
+    .environmentObject(TransitionManager())
     .onAppear {
         GameSettings.shared.backgroundStyle = .circuitTraces
     }

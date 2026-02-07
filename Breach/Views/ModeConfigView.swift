@@ -43,6 +43,7 @@ struct ModeConfigView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
     @EnvironmentObject private var backgroundState: BackgroundStateManager
+    @EnvironmentObject private var transitionManager: TransitionManager
     @ObservedObject private var settings = GameSettings.shared
     @State private var selectedDifficulty: Difficulty = .easy
     @State private var showingGame = false
@@ -88,7 +89,9 @@ struct ModeConfigView: View {
     private var headerSection: some View {
         HStack {
             Button {
-                dismiss()
+                transitionManager.transition {
+                    dismiss()
+                }
             } label: {
                 HStack(spacing: BreachSpacing.xs) {
                     Image(systemName: "chevron.left")
@@ -231,10 +234,12 @@ struct ModeConfigView: View {
                 mode == .standard ? "INITIATE BREACH" : "START RUN",
                 color: mode.color
             ) {
-                if mode == .standard {
-                    showingGame = true
-                } else {
-                    showingGridRush = true
+                transitionManager.transition(style: .breachInitiated) {
+                    if mode == .standard {
+                        showingGame = true
+                    } else {
+                        showingGridRush = true
+                    }
                 }
             }
 
@@ -256,4 +261,5 @@ struct ModeConfigView: View {
         }
     }
     .environmentObject(BackgroundStateManager())
+    .environmentObject(TransitionManager())
 }
