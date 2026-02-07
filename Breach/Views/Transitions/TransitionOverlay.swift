@@ -110,7 +110,9 @@ struct TransitionOverlay: View {
         context.fill(Path(fullRect), with: .color(BreachColors.background))
 
         for cell in manager.cells {
-            guard progress >= cell.threshold else { continue }
+            // Invert threshold so reveal goes edges→center (reverse of cover)
+            let revealThreshold = 1.0 - cell.threshold
+            guard progress >= revealThreshold else { continue }
 
             let xPos = CGFloat(cell.col) * cellWidth
             let yPos = CGFloat(cell.row) * cellHeight
@@ -122,7 +124,7 @@ struct TransitionOverlay: View {
             context.blendMode = .normal
 
             // Leading edge glow
-            let edgeDist = abs(progress - cell.threshold)
+            let edgeDist = abs(progress - revealThreshold)
             if edgeDist < 0.08 {
                 let glowOpacity = (1.0 - edgeDist / 0.08) * 0.4
                 context.stroke(

@@ -2,54 +2,53 @@ import SwiftUI
 
 struct StatsView: View {
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var transitionManager: TransitionManager
     @ObservedObject private var settings = GameSettings.shared
 
     var body: some View {
-        ZStack {
-            BreachColors.background
-                .ignoresSafeArea()
+        VStack(spacing: BreachSpacing.lg) {
+            headerSection
 
-            VStack(spacing: BreachSpacing.lg) {
-                // Header
-                headerSection
-
-                ScrollView {
-                    VStack(spacing: BreachSpacing.lg) {
-                        // Overall Stats
-                        overallStatsSection
-
-                        // Grid Rush Stats
-                        gridRushStatsSection
-
-                        // Per-Difficulty Stats
-                        difficultyStatsSection
-                    }
-                    .padding(.horizontal, BreachSpacing.lg)
+            ScrollView {
+                VStack(spacing: BreachSpacing.lg) {
+                    overallStatsSection
+                    gridRushStatsSection
+                    difficultyStatsSection
                 }
+                .padding(.horizontal, BreachSpacing.lg)
             }
         }
-        .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
+        .navigationBarBackButtonHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
+        .enableSwipeBack()
+        .clearNavigationBackground()
     }
 
     // MARK: - Header
 
     private var headerSection: some View {
         HStack {
+            Button {
+                transitionManager.transition { dismiss() }
+            } label: {
+                HStack(spacing: BreachSpacing.xs) {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 14, weight: .bold))
+                    Text("BACK")
+                        .font(BreachTypography.caption())
+                }
+                .foregroundColor(BreachColors.accent)
+            }
+
+            Spacer()
+
             Text("STATISTICS")
-                .font(BreachTypography.heading())
+                .font(BreachTypography.heading(16))
                 .foregroundColor(BreachColors.accent)
 
             Spacer()
 
-            Button {
-                dismiss()
-            } label: {
-                Image(systemName: "xmark")
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundColor(BreachColors.accent)
-                    .frame(width: 32, height: 32)
-            }
+            Color.clear.frame(width: 60, height: 1)
         }
         .padding(.horizontal, BreachSpacing.lg)
         .padding(.top, BreachSpacing.lg)
@@ -332,5 +331,12 @@ struct StatItem: View {
 }
 
 #Preview {
-    StatsView()
+    ZStack {
+        BackgroundView(state: .menu).ignoresSafeArea()
+        NavigationStack {
+            StatsView()
+        }
+    }
+    .environmentObject(BackgroundStateManager())
+    .environmentObject(TransitionManager())
 }

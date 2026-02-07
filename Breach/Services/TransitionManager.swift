@@ -79,14 +79,14 @@ final class TransitionManager: ObservableObject {
             guard let self else { return }
             beginPhase(.covered)
 
-            var transaction = Transaction()
-            transaction.disablesAnimations = true
-            withTransaction(transaction) {
-                action()
-            }
+            // Disable UIKit animations for the entire covered phase so
+            // NavigationStack's push/pop slide never plays.
+            UIView.setAnimationsEnabled(false)
+            action()
 
             DispatchQueue.main.asyncAfter(deadline: .now() + midTime) { [weak self] in
                 guard let self else { return }
+                UIView.setAnimationsEnabled(true)
                 beginPhase(.revealing)
 
                 DispatchQueue.main.asyncAfter(deadline: .now() + revealTime) { [weak self] in

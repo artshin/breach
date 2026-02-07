@@ -2,87 +2,82 @@ import SwiftUI
 
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var transitionManager: TransitionManager
     @ObservedObject private var settings = GameSettings.shared
 
     @State private var showResetConfirmation = false
 
     var body: some View {
-        ZStack {
-            // Animated background
-            BackgroundView(state: .settings)
-                .ignoresSafeArea()
+        VStack(spacing: BreachSpacing.lg) {
+            headerSection
 
-            VStack(spacing: BreachSpacing.lg) {
-                // Header
-                headerSection
+            ScrollView {
+                VStack(spacing: BreachSpacing.md) {
+                    // Appearance Section
+                    SettingsSection(title: "APPEARANCE") {
+                        BackgroundStylePicker(selection: $settings.backgroundStyle)
+                    }
 
-                // Settings List
-                ScrollView {
-                    VStack(spacing: BreachSpacing.md) {
-                        // Appearance Section
-                        SettingsSection(title: "APPEARANCE") {
-                            BackgroundStylePicker(selection: $settings.backgroundStyle)
+                    // Audio Section
+                    SettingsSection(title: "AUDIO") {
+                        SettingsToggle(
+                            title: "Sound Effects",
+                            icon: "speaker.wave.2",
+                            isOn: $settings.soundEnabled
+                        )
+
+                        SettingsToggle(
+                            title: "Haptic Feedback",
+                            icon: "iphone.radiowaves.left.and.right",
+                            isOn: $settings.hapticsEnabled
+                        )
+                    }
+
+                    // Game Section
+                    SettingsSection(title: "GAME") {
+                        SettingsButton(
+                            title: "Show Tutorial",
+                            icon: "questionmark.circle",
+                            color: BreachColors.accent
+                        ) {
+                            TutorialManager.shared.resetTutorial()
+                            transitionManager.transition { dismiss() }
                         }
 
-                        // Audio Section
-                        SettingsSection(title: "AUDIO") {
-                            SettingsToggle(
-                                title: "Sound Effects",
-                                icon: "speaker.wave.2",
-                                isOn: $settings.soundEnabled
-                            )
-
-                            SettingsToggle(
-                                title: "Haptic Feedback",
-                                icon: "iphone.radiowaves.left.and.right",
-                                isOn: $settings.hapticsEnabled
-                            )
-                        }
-
-                        // Game Section
-                        SettingsSection(title: "GAME") {
-                            SettingsButton(
-                                title: "Show Tutorial",
-                                icon: "questionmark.circle",
-                                color: BreachColors.accent
-                            ) {
-                                TutorialManager.shared.resetTutorial()
-                                dismiss()
-                            }
-
-                            SettingsButton(
-                                title: "Reset Progress",
-                                icon: "arrow.counterclockwise",
-                                color: BreachColors.danger
-                            ) {
-                                showResetConfirmation = true
-                            }
-                        }
-
-                        // About Section
-                        SettingsSection(title: "ABOUT") {
-                            SettingsInfoRow(
-                                title: "Version",
-                                value: "1.0.0"
-                            )
-
-                            SettingsButton(
-                                title: "Privacy Policy",
-                                icon: "lock.shield",
-                                color: BreachColors.accent
-                            ) {
-                                // Will open privacy policy URL
-                            }
+                        SettingsButton(
+                            title: "Reset Progress",
+                            icon: "arrow.counterclockwise",
+                            color: BreachColors.danger
+                        ) {
+                            showResetConfirmation = true
                         }
                     }
-                    .padding(.horizontal, BreachSpacing.lg)
-                }
 
-                Spacer()
+                    // About Section
+                    SettingsSection(title: "ABOUT") {
+                        SettingsInfoRow(
+                            title: "Version",
+                            value: "1.0.0"
+                        )
+
+                        SettingsButton(
+                            title: "Privacy Policy",
+                            icon: "lock.shield",
+                            color: BreachColors.accent
+                        ) {
+                            // Will open privacy policy URL
+                        }
+                    }
+                }
+                .padding(.horizontal, BreachSpacing.lg)
             }
+
+            Spacer()
         }
-        .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
+        .navigationBarBackButtonHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
+        .enableSwipeBack()
+        .clearNavigationBackground()
         .alert("Reset Progress", isPresented: $showResetConfirmation) {
             Button("Cancel", role: .cancel) {}
             Button("Reset", role: .destructive) {
@@ -97,20 +92,27 @@ struct SettingsView: View {
 
     private var headerSection: some View {
         HStack {
+            Button {
+                transitionManager.transition { dismiss() }
+            } label: {
+                HStack(spacing: BreachSpacing.xs) {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 14, weight: .bold))
+                    Text("BACK")
+                        .font(BreachTypography.caption())
+                }
+                .foregroundColor(BreachColors.accent)
+            }
+
+            Spacer()
+
             Text("SETTINGS")
-                .font(BreachTypography.heading())
+                .font(BreachTypography.heading(16))
                 .foregroundColor(BreachColors.accent)
 
             Spacer()
 
-            Button {
-                dismiss()
-            } label: {
-                Image(systemName: "xmark")
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundColor(BreachColors.accent)
-                    .frame(width: 32, height: 32)
-            }
+            Color.clear.frame(width: 60, height: 1)
         }
         .padding(.horizontal, BreachSpacing.lg)
         .padding(.top, BreachSpacing.lg)
@@ -373,5 +375,12 @@ struct MiniBackgroundPreview: View {
 }
 
 #Preview {
-    SettingsView()
+    ZStack {
+        BackgroundView(state: .menu).ignoresSafeArea()
+        NavigationStack {
+            SettingsView()
+        }
+    }
+    .environmentObject(BackgroundStateManager())
+    .environmentObject(TransitionManager())
 }

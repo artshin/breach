@@ -1,21 +1,15 @@
 import SwiftUI
 
 struct HomeView: View {
-    enum Sheet: Identifiable {
-        case settings, stats, tutorial
-
-        var id: String {
-            "\(self)"
-        }
-    }
-
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
     @EnvironmentObject private var backgroundState: BackgroundStateManager
     @EnvironmentObject private var transitionManager: TransitionManager
     @ObservedObject private var tutorialManager = TutorialManager.shared
     @State private var selectedMode: GameMode = .standard
     @State private var showModeConfig = false
-    @State private var activeSheet: Sheet?
+    @State private var showStats = false
+    @State private var showSettings = false
+    @State private var showTutorial = false
 
     private var isWideLayout: Bool {
         horizontalSizeClass == .regular
@@ -41,29 +35,20 @@ struct HomeView: View {
         .navigationDestination(isPresented: $showModeConfig) {
             ModeConfigView(mode: selectedMode)
         }
-        .sheet(
-            item: $activeSheet,
-            onDismiss: {
-                if tutorialManager.shouldShowTutorial {
-                    activeSheet = .tutorial
-                }
-            },
-            content: { sheet in
-                switch sheet {
-                case .settings:
-                    SettingsView()
-                case .stats:
-                    StatsView()
-                case .tutorial:
-                    TutorialView(onComplete: {})
-                }
-            }
-        )
+        .navigationDestination(isPresented: $showStats) {
+            StatsView()
+        }
+        .navigationDestination(isPresented: $showSettings) {
+            SettingsView()
+        }
+        .sheet(isPresented: $showTutorial) {
+            TutorialView(onComplete: {})
+        }
         .clearNavigationBackground()
         .onAppear {
             backgroundState.state = .menu
             if tutorialManager.shouldShowTutorial {
-                activeSheet = .tutorial
+                showTutorial = true
             }
         }
     }
@@ -153,10 +138,10 @@ struct HomeView: View {
 
             HStack(spacing: BreachSpacing.xl) {
                 SystemBarButton(icon: "chart.bar", label: "STATS", color: BreachColors.accentSecondary) {
-                    activeSheet = .stats
+                    transitionManager.transition { showStats = true }
                 }
                 SystemBarButton(icon: "gearshape", label: "CONFIG", color: BreachColors.textSecondary) {
-                    activeSheet = .settings
+                    transitionManager.transition { showSettings = true }
                 }
             }
         }
