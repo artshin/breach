@@ -9,9 +9,8 @@ struct TutorialStep {
 
 struct TutorialView: View {
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var transitionManager: TransitionManager
     @State private var currentStep = 0
-
-    let onComplete: () -> Void
 
     // swiftlint:disable line_length
     private let steps: [TutorialStep] = [
@@ -61,26 +60,47 @@ struct TutorialView: View {
     // swiftlint:enable line_length
 
     var body: some View {
-        ZStack {
-            BreachColors.background
-                .ignoresSafeArea()
-
-            VStack(spacing: BreachSpacing.xl) {
-                // Progress indicator
-                progressIndicator
-
-                Spacer()
-
-                // Step content
-                stepContent
-
-                Spacer()
-
-                // Navigation buttons
-                navigationButtons
-            }
-            .padding(BreachSpacing.xl)
+        VStack(spacing: BreachSpacing.xl) {
+            headerSection
+            progressIndicator
+            Spacer()
+            stepContent
+            Spacer()
+            navigationButtons
         }
+        .padding(.horizontal, BreachSpacing.xl)
+        .padding(.bottom, BreachSpacing.xl)
+        .navigationBarBackButtonHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
+        .enableSwipeBack()
+        .clearNavigationBackground()
+    }
+
+    // MARK: - Header
+
+    private var headerSection: some View {
+        HStack {
+            Button {
+                transitionManager.transition { dismiss() }
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(BreachColors.accent)
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
+            }
+
+            Spacer()
+
+            Text("HOW TO PLAY")
+                .font(BreachTypography.heading(16))
+                .foregroundColor(BreachColors.accent)
+
+            Spacer()
+
+            Color.clear.frame(width: 44, height: 1)
+        }
+        .padding(.top, BreachSpacing.lg)
     }
 
     // MARK: - Progress Indicator
@@ -89,8 +109,11 @@ struct TutorialView: View {
         HStack(spacing: BreachSpacing.xs) {
             ForEach(0..<steps.count, id: \.self) { index in
                 Capsule()
-                    .fill(index <= currentStep ? steps[currentStep].highlightColor : BreachColors.textMuted
-                        .opacity(0.3))
+                    .fill(
+                        index <= currentStep
+                            ? steps[currentStep].highlightColor
+                            : BreachColors.textMuted.opacity(0.3)
+                    )
                     .frame(height: 4)
             }
         }
@@ -102,19 +125,16 @@ struct TutorialView: View {
         let step = steps[currentStep]
 
         return VStack(spacing: BreachSpacing.xl) {
-            // Icon
             Image(systemName: step.icon)
                 .font(.system(size: 64))
                 .foregroundColor(step.highlightColor)
                 .shadow(color: step.highlightColor.opacity(0.5), radius: 20)
 
-            // Title
             Text(step.title)
                 .font(BreachTypography.heading(24))
                 .foregroundColor(step.highlightColor)
                 .multilineTextAlignment(.center)
 
-            // Description
             Text(step.description)
                 .font(BreachTypography.body())
                 .foregroundColor(BreachColors.textPrimary)
@@ -128,7 +148,6 @@ struct TutorialView: View {
 
     private var navigationButtons: some View {
         VStack(spacing: BreachSpacing.md) {
-            // Main action button
             if currentStep < steps.count - 1 {
                 BreachButton("NEXT", color: steps[currentStep].highlightColor) {
                     withAnimation(.easeInOut(duration: 0.3)) {
@@ -136,21 +155,16 @@ struct TutorialView: View {
                     }
                 }
             } else {
-                BreachButton("START PLAYING", color: BreachColors.success) {
-                    TutorialManager.shared.markTutorialComplete()
-                    onComplete()
-                    dismiss()
+                BreachButton("DONE", color: BreachColors.success) {
+                    transitionManager.transition { dismiss() }
                 }
             }
 
-            // Skip button
             if currentStep < steps.count - 1 {
                 Button {
-                    TutorialManager.shared.markTutorialComplete()
-                    onComplete()
-                    dismiss()
+                    transitionManager.transition { dismiss() }
                 } label: {
-                    Text("SKIP TUTORIAL")
+                    Text("SKIP")
                         .font(BreachTypography.caption())
                         .foregroundColor(BreachColors.textMuted)
                 }
@@ -160,31 +174,13 @@ struct TutorialView: View {
     }
 }
 
-// MARK: - Tutorial Manager
-
-@MainActor
-class TutorialManager: ObservableObject {
-    static let shared = TutorialManager()
-
-    private let hasSeenTutorialKey = "tutorial.hasSeenTutorial"
-
-    @Published var shouldShowTutorial: Bool
-
-    private init() {
-        shouldShowTutorial = !UserDefaults.standard.bool(forKey: hasSeenTutorialKey)
-    }
-
-    func markTutorialComplete() {
-        UserDefaults.standard.set(true, forKey: hasSeenTutorialKey)
-        shouldShowTutorial = false
-    }
-
-    func resetTutorial() {
-        UserDefaults.standard.set(false, forKey: hasSeenTutorialKey)
-        shouldShowTutorial = true
-    }
-}
-
 #Preview {
-    TutorialView(onComplete: {})
+    ZStack {
+        BackgroundView(state: .menu).ignoresSafeArea()
+        NavigationStack {
+            TutorialView()
+        }
+    }
+    .environmentObject(BackgroundStateManager())
+    .environmentObject(TransitionManager())
 }

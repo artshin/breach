@@ -174,47 +174,112 @@ extension View {
 
 // MARK: - Navigation Helpers
 
-private struct NavigationHelper: UIViewControllerRepresentable {
-    let swipeBack: Bool
-
+private struct ClearNavigationHelper: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> UIViewController {
-        NavigationHelperController(swipeBack: swipeBack)
+        ClearNavigationController()
     }
 
     func updateUIViewController(_: UIViewController, context: Context) {}
 }
 
-private class NavigationHelperController: UIViewController {
-    let swipeBack: Bool
+private class ClearNavigationController: UIViewController {
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        navigationController?.view.backgroundColor = .clear
+        parent?.view.backgroundColor = .clear
+    }
+}
 
-    init(swipeBack: Bool) {
-        self.swipeBack = swipeBack
+// MARK: - Hex Swipe Back
+
+private struct HexSwipeBackModifier: ViewModifier {
+    @EnvironmentObject private var transitionManager: TransitionManager
+
+    func body(content: Content) -> some View {
+        content.background(
+            HexSwipeBackHelper(transitionManager: transitionManager)
+        )
+    }
+}
+
+private struct HexSwipeBackHelper: UIViewControllerRepresentable {
+    let transitionManager: TransitionManager
+
+    func makeUIViewController(context: Context) -> HexSwipeBackController {
+        HexSwipeBackController(transitionManager: transitionManager)
+    }
+
+    func updateUIViewController(_ controller: HexSwipeBackController, context: Context) {
+        controller.transitionManager = transitionManager
+    }
+}
+
+private class HexSwipeBackController: UIViewController {
+    var transitionManager: TransitionManager
+    private let swipeThreshold: CGFloat = 80
+    private var edgePan: UIScreenEdgePanGestureRecognizer?
+
+    init(transitionManager: TransitionManager) {
+        self.transitionManager = transitionManager
         super.init(nibName: nil, bundle: nil)
     }
 
     @available(*, unavailable)
     required init?(coder _: NSCoder) {
-        fatalError()
+        fatalError("init(coder:) is not supported")
     }
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        navigationController?.interactivePopGestureRecognizer?.isEnabled = false
         navigationController?.view.backgroundColor = .clear
         parent?.view.backgroundColor = .clear
-        if swipeBack {
-            navigationController?.interactivePopGestureRecognizer?.isEnabled = true
-            navigationController?.interactivePopGestureRecognizer?.delegate = nil
+        installEdgeGesture()
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        removeEdgeGesture()
+    }
+
+    private func installEdgeGesture() {
+        guard edgePan == nil, let navView = navigationController?.view else { return }
+        let gesture = UIScreenEdgePanGestureRecognizer(
+            target: self,
+            action: #selector(handleEdgePan)
+        )
+        gesture.edges = .left
+        navView.addGestureRecognizer(gesture)
+        edgePan = gesture
+    }
+
+    private func removeEdgeGesture() {
+        if let gesture = edgePan {
+            gesture.view?.removeGestureRecognizer(gesture)
+            edgePan = nil
+        }
+    }
+
+    @objc private func handleEdgePan(_ gesture: UIScreenEdgePanGestureRecognizer) {
+        guard gesture.state == .ended else { return }
+        let translation = gesture.translation(in: gesture.view)
+        let velocity = gesture.velocity(in: gesture.view)
+        guard translation.x > swipeThreshold || velocity.x > 500 else { return }
+        guard let nav = navigationController, nav.viewControllers.count > 1 else { return }
+
+        transitionManager.transition {
+            nav.popViewController(animated: false)
         }
     }
 }
 
 extension View {
     func clearNavigationBackground() -> some View {
-        background(NavigationHelper(swipeBack: false))
+        background(ClearNavigationHelper())
     }
 
     func enableSwipeBack() -> some View {
-        background(NavigationHelper(swipeBack: true))
+        modifier(HexSwipeBackModifier())
     }
 }
 

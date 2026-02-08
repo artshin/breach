@@ -155,6 +155,92 @@ struct BreachSectionHeader: View {
     }
 }
 
+// MARK: - Screen Header
+
+struct ScreenHeader: View {
+    let title: String
+    let tag: String
+    let color: Color
+    let dismissAction: () -> Void
+
+    init(
+        _ title: String,
+        tag: String = "",
+        color: Color = BreachColors.accent,
+        dismissAction: @escaping () -> Void
+    ) {
+        self.title = title
+        self.tag = tag
+        self.color = color
+        self.dismissAction = dismissAction
+    }
+
+    var body: some View {
+        HStack(spacing: BreachSpacing.sm) {
+            Button(action: dismissAction) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(color)
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
+            }
+
+            Rectangle()
+                .fill(color.opacity(0.3))
+                .frame(height: 1)
+
+            Text("//")
+                .font(BreachTypography.caption(10))
+                .foregroundColor(color.opacity(0.4))
+
+            GlowingText(title, font: BreachTypography.title(22), color: color)
+                .fixedSize()
+
+            if !tag.isEmpty {
+                Text(tag)
+                    .font(.system(size: 8, weight: .bold, design: .monospaced))
+                    .foregroundColor(color.opacity(0.4))
+                    .fixedSize()
+            }
+
+            Rectangle()
+                .fill(color.opacity(0.3))
+                .frame(height: 1)
+        }
+        .padding(.horizontal, BreachSpacing.lg)
+        .padding(.top, BreachSpacing.lg)
+    }
+}
+
+// MARK: - Section Divider
+
+struct SectionDivider: View {
+    let title: String
+    let color: Color
+
+    init(_ title: String, color: Color = BreachColors.accent) {
+        self.title = title
+        self.color = color
+    }
+
+    var body: some View {
+        HStack(spacing: BreachSpacing.sm) {
+            Rectangle()
+                .fill(color.opacity(0.25))
+                .frame(height: 1)
+
+            Text(title)
+                .font(BreachTypography.caption(10))
+                .foregroundColor(color.opacity(0.6))
+                .fixedSize()
+
+            Rectangle()
+                .fill(color.opacity(0.25))
+                .frame(height: 1)
+        }
+    }
+}
+
 // MARK: - Glowing Text
 
 struct GlowingText: View {

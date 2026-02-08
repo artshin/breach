@@ -6,78 +6,33 @@ struct SettingsView: View {
     @ObservedObject private var settings = GameSettings.shared
 
     @State private var showResetConfirmation = false
+    @State private var showTutorial = false
 
     var body: some View {
-        VStack(spacing: BreachSpacing.lg) {
-            headerSection
-
-            ScrollView {
-                VStack(spacing: BreachSpacing.md) {
-                    // Appearance Section
-                    SettingsSection(title: "APPEARANCE") {
-                        BackgroundStylePicker(selection: $settings.backgroundStyle)
-                    }
-
-                    // Audio Section
-                    SettingsSection(title: "AUDIO") {
-                        SettingsToggle(
-                            title: "Sound Effects",
-                            icon: "speaker.wave.2",
-                            isOn: $settings.soundEnabled
-                        )
-
-                        SettingsToggle(
-                            title: "Haptic Feedback",
-                            icon: "iphone.radiowaves.left.and.right",
-                            isOn: $settings.hapticsEnabled
-                        )
-                    }
-
-                    // Game Section
-                    SettingsSection(title: "GAME") {
-                        SettingsButton(
-                            title: "Show Tutorial",
-                            icon: "questionmark.circle",
-                            color: BreachColors.accent
-                        ) {
-                            TutorialManager.shared.resetTutorial()
-                            transitionManager.transition { dismiss() }
-                        }
-
-                        SettingsButton(
-                            title: "Reset Progress",
-                            icon: "arrow.counterclockwise",
-                            color: BreachColors.danger
-                        ) {
-                            showResetConfirmation = true
-                        }
-                    }
-
-                    // About Section
-                    SettingsSection(title: "ABOUT") {
-                        SettingsInfoRow(
-                            title: "Version",
-                            value: "1.0.0"
-                        )
-
-                        SettingsButton(
-                            title: "Privacy Policy",
-                            icon: "lock.shield",
-                            color: BreachColors.accent
-                        ) {
-                            // Will open privacy policy URL
-                        }
-                    }
-                }
-                .padding(.horizontal, BreachSpacing.lg)
+        VStack(spacing: 0) {
+            ScreenHeader("SETTINGS", tag: "SYS://CONFIG") {
+                transitionManager.transition { dismiss() }
             }
 
-            Spacer()
+            ScrollView {
+                VStack(spacing: BreachSpacing.xl) {
+                    appearanceSection
+                    audioSection
+                    gameSection
+                    aboutSection
+                }
+                .padding(.horizontal, BreachSpacing.lg)
+                .padding(.top, BreachSpacing.lg)
+                .padding(.bottom, BreachSpacing.xxl)
+            }
         }
         .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .navigationBar)
         .enableSwipeBack()
         .clearNavigationBackground()
+        .navigationDestination(isPresented: $showTutorial) {
+            TutorialView()
+        }
         .alert("Reset Progress", isPresented: $showResetConfirmation) {
             Button("Cancel", role: .cancel) {}
             Button("Reset", role: .destructive) {
@@ -88,54 +43,109 @@ struct SettingsView: View {
         }
     }
 
-    // MARK: - Header
+    // MARK: - Appearance
 
-    private var headerSection: some View {
-        HStack {
-            Button {
-                transitionManager.transition { dismiss() }
-            } label: {
-                HStack(spacing: BreachSpacing.xs) {
-                    Image(systemName: "chevron.left")
-                        .font(.system(size: 14, weight: .bold))
-                    Text("BACK")
-                        .font(BreachTypography.caption())
-                }
-                .foregroundColor(BreachColors.accent)
+    private var appearanceSection: some View {
+        VStack(spacing: BreachSpacing.md) {
+            SectionDivider("APPEARANCE")
+            BackgroundStylePicker(selection: $settings.backgroundStyle)
+        }
+    }
+
+    // MARK: - Audio
+
+    private var audioSection: some View {
+        VStack(spacing: 0) {
+            SectionDivider("AUDIO")
+                .padding(.bottom, BreachSpacing.md)
+
+            SettingsToggle(
+                title: "Sound Effects",
+                icon: "speaker.wave.2",
+                isOn: $settings.soundEnabled
+            )
+
+            SettingsRowDivider()
+
+            SettingsToggle(
+                title: "Haptic Feedback",
+                icon: "iphone.radiowaves.left.and.right",
+                isOn: $settings.hapticsEnabled
+            )
+        }
+    }
+
+    // MARK: - Game
+
+    private var gameSection: some View {
+        VStack(spacing: 0) {
+            SectionDivider("GAME")
+                .padding(.bottom, BreachSpacing.md)
+
+            SettingsToggle(
+                title: "Help Mode",
+                icon: "lightbulb",
+                isOn: $settings.helpModeEnabled
+            )
+
+            Text("Highlights optimal moves. Stats are not tracked.")
+                .font(BreachTypography.caption(10))
+                .foregroundColor(BreachColors.textMuted)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.leading, 36)
+                .padding(.bottom, BreachSpacing.xs)
+
+            SettingsRowDivider()
+
+            SettingsButton(
+                title: "How to Play",
+                icon: "questionmark.circle",
+                color: BreachColors.accent
+            ) {
+                transitionManager.transition { showTutorial = true }
             }
 
-            Spacer()
+            SettingsRowDivider()
 
-            Text("SETTINGS")
-                .font(BreachTypography.heading(16))
-                .foregroundColor(BreachColors.accent)
-
-            Spacer()
-
-            Color.clear.frame(width: 60, height: 1)
+            SettingsButton(
+                title: "Reset Progress",
+                icon: "arrow.counterclockwise",
+                color: BreachColors.danger
+            ) {
+                showResetConfirmation = true
+            }
         }
-        .padding(.horizontal, BreachSpacing.lg)
-        .padding(.top, BreachSpacing.lg)
+    }
+
+    // MARK: - About
+
+    private var aboutSection: some View {
+        VStack(spacing: 0) {
+            SectionDivider("ABOUT")
+                .padding(.bottom, BreachSpacing.md)
+
+            SettingsInfoRow(title: "Version", value: "1.0.0")
+
+            SettingsRowDivider()
+
+            SettingsButton(
+                title: "Privacy Policy",
+                icon: "lock.shield",
+                color: BreachColors.accent
+            ) {
+                // Will open privacy policy URL
+            }
+        }
     }
 }
 
-// MARK: - Settings Section
+// MARK: - Settings Row Divider
 
-struct SettingsSection<Content: View>: View {
-    let title: String
-    @ViewBuilder let content: Content
-
+struct SettingsRowDivider: View {
     var body: some View {
-        VStack(alignment: .leading, spacing: BreachSpacing.sm) {
-            BreachSectionHeader(title)
-                .padding(.leading, BreachSpacing.xs)
-
-            BreachPanel {
-                VStack(spacing: 0) {
-                    content
-                }
-            }
-        }
+        Rectangle()
+            .fill(BreachColors.accent.opacity(0.1))
+            .frame(height: 1)
     }
 }
 
@@ -226,8 +236,8 @@ struct BackgroundStylePicker: View {
     @Binding var selection: BackgroundStyle
 
     var body: some View {
-        VStack(spacing: BreachSpacing.md) {
-            ForEach(BackgroundStyle.allCases) { style in
+        VStack(spacing: 0) {
+            ForEach(Array(BackgroundStyle.allCases.enumerated()), id: \.element) { index, style in
                 BackgroundStyleOption(
                     style: style,
                     isSelected: selection == style
@@ -235,6 +245,10 @@ struct BackgroundStylePicker: View {
                     withAnimation(.easeInOut(duration: 0.2)) {
                         selection = style
                     }
+                }
+
+                if index < BackgroundStyle.allCases.count - 1 {
+                    SettingsRowDivider()
                 }
             }
         }
@@ -251,14 +265,19 @@ struct BackgroundStyleOption: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: BreachSpacing.md) {
+                // Left accent bar for selected state
+                Rectangle()
+                    .fill(isSelected ? BreachColors.accent : .clear)
+                    .frame(width: 3, height: 36)
+
                 // Mini preview
                 MiniBackgroundPreview(style: style)
-                    .frame(width: 60, height: 40)
+                    .frame(width: 52, height: 32)
                     .overlay(
                         Rectangle()
                             .stroke(
                                 isSelected ? BreachColors.accent : BreachColors.borderSecondary,
-                                lineWidth: isSelected ? 2 : 1
+                                lineWidth: 1
                             )
                     )
 
@@ -266,7 +285,9 @@ struct BackgroundStyleOption: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(style.rawValue)
                         .font(BreachTypography.body())
-                        .foregroundColor(isSelected ? BreachColors.accent : BreachColors.textPrimary)
+                        .foregroundColor(
+                            isSelected ? BreachColors.accent : BreachColors.textPrimary
+                        )
 
                     Text(style.description)
                         .font(BreachTypography.caption(10))
@@ -274,13 +295,6 @@ struct BackgroundStyleOption: View {
                 }
 
                 Spacer()
-
-                // Selection indicator
-                if isSelected {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 18))
-                        .foregroundColor(BreachColors.accent)
-                }
             }
             .padding(.vertical, BreachSpacing.sm)
         }
@@ -294,7 +308,6 @@ struct MiniBackgroundPreview: View {
 
     var body: some View {
         Canvas { context, size in
-            // Dark background
             context.fill(
                 Path(CGRect(origin: .zero, size: size)),
                 with: .color(Color(hex: "080C16"))
@@ -312,63 +325,42 @@ struct MiniBackgroundPreview: View {
     private func drawMiniGrid(context: GraphicsContext, size: CGSize) {
         let cyan = Color(hex: "3B9EFF")
         let vanishingY = size.height * 0.3
-
-        // Horizontal lines
         for i in 0..<5 {
             let progress = Double(i) / 4.0
             let y = vanishingY + (size.height - vanishingY) * pow(progress, 1.5)
-            let opacity = 0.3 + progress * 0.4
-
             var path = Path()
             path.move(to: CGPoint(x: 0, y: y))
             path.addLine(to: CGPoint(x: size.width, y: y))
-
-            context.stroke(path, with: .color(cyan.opacity(opacity)), lineWidth: 0.5)
+            context.stroke(path, with: .color(cyan.opacity(0.3 + progress * 0.4)), lineWidth: 0.5)
         }
-
-        // Vertical lines converging
         let centerX = size.width / 2
         for i in 0..<5 {
-            let spread = Double(i - 2) / 2.0 * 0.8
-            let bottomX = centerX + size.width * spread
-
+            let bottomX = centerX + size.width * Double(i - 2) / 2.0 * 0.8
             var path = Path()
             path.move(to: CGPoint(x: centerX, y: vanishingY))
             path.addLine(to: CGPoint(x: bottomX, y: size.height))
-
             context.stroke(path, with: .color(cyan.opacity(0.3)), lineWidth: 0.5)
         }
     }
 
     private func drawMiniCircuit(context: GraphicsContext, size: CGSize) {
         let cyan = Color(hex: "3B9EFF")
-
-        // Draw a few simple circuit traces
         let traces: [[(CGFloat, CGFloat)]] = [
             [(0, 0.3), (0.3, 0.3), (0.3, 0.7), (0.6, 0.7)],
             [(1.0, 0.5), (0.7, 0.5), (0.7, 0.2), (0.4, 0.2)],
             [(0.5, 1.0), (0.5, 0.6), (0.9, 0.6)]
         ]
-
         for trace in traces {
             var path = Path()
             for (i, point) in trace.enumerated() {
-                let cgPoint = CGPoint(x: point.0 * size.width, y: point.1 * size.height)
-                if i == 0 {
-                    path.move(to: cgPoint)
-                } else {
-                    path.addLine(to: cgPoint)
-                }
+                let pt = CGPoint(x: point.0 * size.width, y: point.1 * size.height)
+                if i == 0 { path.move(to: pt) } else { path.addLine(to: pt) }
             }
             context.stroke(path, with: .color(cyan.opacity(0.5)), lineWidth: 1)
-
-            // Draw nodes at corners
             for point in trace {
-                let cgPoint = CGPoint(x: point.0 * size.width, y: point.1 * size.height)
-                context.fill(
-                    Path(ellipseIn: CGRect(x: cgPoint.x - 1.5, y: cgPoint.y - 1.5, width: 3, height: 3)),
-                    with: .color(cyan.opacity(0.6))
-                )
+                let pt = CGPoint(x: point.0 * size.width, y: point.1 * size.height)
+                let rect = CGRect(x: pt.x - 1.5, y: pt.y - 1.5, width: 3, height: 3)
+                context.fill(Path(ellipseIn: rect), with: .color(cyan.opacity(0.6)))
             }
         }
     }

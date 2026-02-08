@@ -313,6 +313,7 @@ class GridRushViewModel: ObservableObject, GamePlayable {
 
     func advancingPositions() -> Set<Position> {
         guard let state = gameState, !state.gameResult.isGameOver else { return [] }
+        guard settings.helpModeEnabled else { return [] }
 
         return PathFinder.positionsAdvancingSequences(
             sequences: state.sequences,

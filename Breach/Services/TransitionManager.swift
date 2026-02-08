@@ -36,9 +36,25 @@ final class TransitionManager: ObservableObject {
 
     private(set) var cells: [DissolveCell] = []
     private var phaseStart: Date = .distantPast
+    private var tapScreenPoint: CGPoint?
+    private var touchTracker: TouchTracker?
 
     var isActive: Bool {
         phase != .idle
+    }
+
+    // MARK: - Touch Tracking
+
+    func installTouchTracker() {
+        guard touchTracker == nil else { return }
+        guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = scene.windows.first
+        else { return }
+        let tracker = TouchTracker { [weak self] point in
+            self?.tapScreenPoint = point
+        }
+        window.addGestureRecognizer(tracker)
+        touchTracker = tracker
     }
 
     // MARK: - Progress
@@ -66,11 +82,29 @@ final class TransitionManager: ObservableObject {
         }
 
         self.style = style
-        cells = Self.generateCells(cols: gridCols, rows: gridRows)
+        let origin = normalizedOrigin()
+        cells = Self.generateCells(cols: gridCols, rows: gridRows, origin: origin)
 
         HapticsManager.shared.lightImpact()
         beginPhase(.covering)
 
+        schedulePhaseCascade(action: action)
+    }
+
+    // MARK: - Private
+
+    private func normalizedOrigin() -> CGPoint {
+        guard let point = tapScreenPoint else {
+            return CGPoint(x: 0.5, y: 0.5)
+        }
+        let screen = UIScreen.main.bounds.size
+        return CGPoint(
+            x: point.x / screen.width,
+            y: point.y / screen.height
+        )
+    }
+
+    private func schedulePhaseCascade(action: @escaping () -> Void) {
         let coverTime = phaseDuration(.covering)
         let midTime = phaseDuration(.covered)
         let revealTime = phaseDuration(.revealing)
@@ -78,9 +112,6 @@ final class TransitionManager: ObservableObject {
         DispatchQueue.main.asyncAfter(deadline: .now() + coverTime) { [weak self] in
             guard let self else { return }
             beginPhase(.covered)
-
-            // Disable UIKit animations for the entire covered phase so
-            // NavigationStack's push/pop slide never plays.
             UIView.setAnimationsEnabled(false)
             action()
 
@@ -96,8 +127,6 @@ final class TransitionManager: ObservableObject {
             }
         }
     }
-
-    // MARK: - Private
 
     private func beginPhase(_ newPhase: TransitionPhase) {
         phaseStart = Date()
@@ -116,18 +145,34 @@ final class TransitionManager: ObservableObject {
 
     // MARK: - Cell Generation
 
-    private static func generateCells(cols: Int, rows: Int) -> [DissolveCell] {
-        let centerCol = CGFloat(cols) / 2.0
-        let centerRow = CGFloat(rows) / 2.0
-        let maxDist = sqrt(centerCol * centerCol + centerRow * centerRow)
+    private static func generateCells(
+        cols: Int,
+        rows: Int,
+        origin: CGPoint
+    ) -> [DissolveCell] {
+        let originCol = origin.x * CGFloat(cols)
+        let originRow = origin.y * CGFloat(rows)
+
+        // Max distance is to the farthest corner from origin
+        let corners: [CGPoint] = [
+            .zero, CGPoint(x: CGFloat(cols), y: 0),
+            CGPoint(x: 0, y: CGFloat(rows)), CGPoint(x: CGFloat(cols), y: CGFloat(rows))
+        ]
+        let maxDist = corners
+            .map { corner in
+                let dx = corner.x - originCol
+                let dy = corner.y - originRow
+                return sqrt(dx * dx + dy * dy)
+            }
+            .max() ?? 1.0
 
         var result: [DissolveCell] = []
         result.reserveCapacity(cols * rows)
 
         for row in 0..<rows {
             for col in 0..<cols {
-                let dx = CGFloat(col) - centerCol
-                let dy = CGFloat(row) - centerRow
+                let dx = CGFloat(col) - originCol
+                let dy = CGFloat(row) - originRow
                 let dist = sqrt(dx * dx + dy * dy)
                 let normalized = dist / maxDist
                 let jitter = CGFloat.random(in: -0.05...0.05)
@@ -136,5 +181,26 @@ final class TransitionManager: ObservableObject {
             }
         }
         return result
+    }
+}
+
+// MARK: - Touch Tracker
+
+private class TouchTracker: UIGestureRecognizer {
+    private let onTouch: (CGPoint) -> Void
+
+    init(onTouch: @escaping (CGPoint) -> Void) {
+        self.onTouch = onTouch
+        super.init(target: nil, action: nil)
+        cancelsTouchesInView = false
+        delaysTouchesBegan = false
+        delaysTouchesEnded = false
+    }
+
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent) {
+        if let touch = touches.first {
+            onTouch(touch.location(in: view))
+        }
+        state = .failed
     }
 }

@@ -215,6 +215,7 @@ class GameViewModel: ObservableObject, GamePlayable {
 
     func advancingPositions() -> Set<Position> {
         guard !gameState.gameResult.isGameOver else { return [] }
+        guard settings.helpModeEnabled else { return [] }
 
         return PathFinder.positionsAdvancingSequences(
             sequences: gameState.sequences,

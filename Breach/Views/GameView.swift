@@ -7,6 +7,7 @@ struct GameView: View {
     @EnvironmentObject private var backgroundState: BackgroundStateManager
     @EnvironmentObject private var transitionManager: TransitionManager
     @StateObject private var viewModel: GameViewModel
+    @State private var showAbortConfirmation = false
 
     init(difficulty: Difficulty) {
         _viewModel = StateObject(wrappedValue: GameViewModel(difficulty: difficulty))
@@ -50,6 +51,14 @@ struct GameView: View {
         .onAppear { syncBackground() }
         .onChange(of: viewModel.buffer.count) { _ in syncBackground() }
         .onChange(of: viewModel.gameResult) { _ in syncBackground() }
+        .alert("ABORT BREACH", isPresented: $showAbortConfirmation) {
+            Button("ABORT", role: .destructive) {
+                transitionManager.transition { dismiss() }
+            }
+            Button("CONTINUE", role: .cancel) {}
+        } message: {
+            Text("Current progress will be lost.")
+        }
     }
 
     // MARK: - Compact Layout (iPhone Portrait)
@@ -113,27 +122,33 @@ struct GameView: View {
 
     private var headerSection: some View {
         HStack {
-            // Back Button
+            // Abort Button
             Button {
-                transitionManager.transition {
-                    dismiss()
-                }
+                showAbortConfirmation = true
             } label: {
                 HStack(spacing: BreachSpacing.xs) {
-                    Image(systemName: "chevron.left")
+                    Image(systemName: "xmark.octagon.fill")
                         .font(.system(size: 14, weight: .bold))
-                    Text("EXIT")
+                    Text("ABORT")
                         .font(BreachTypography.caption())
                 }
-                .foregroundColor(BreachColors.accent)
+                .foregroundColor(BreachColors.danger)
             }
 
             Spacer()
 
             // Title
-            Text("BREACH PROTOCOL")
-                .font(BreachTypography.heading(16))
-                .foregroundColor(BreachColors.accent)
+            VStack(spacing: 2) {
+                Text("BREACH PROTOCOL")
+                    .font(BreachTypography.heading(16))
+                    .foregroundColor(BreachColors.accent)
+
+                if GameSettings.shared.helpModeEnabled {
+                    Text("HELP MODE · UNRANKED")
+                        .font(BreachTypography.caption(9))
+                        .foregroundColor(BreachColors.warning)
+                }
+            }
 
             Spacer()
 

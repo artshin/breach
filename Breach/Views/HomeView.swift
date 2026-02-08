@@ -4,7 +4,6 @@ struct HomeView: View {
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
     @EnvironmentObject private var backgroundState: BackgroundStateManager
     @EnvironmentObject private var transitionManager: TransitionManager
-    @ObservedObject private var tutorialManager = TutorialManager.shared
     @State private var selectedMode: GameMode = .standard
     @State private var showModeConfig = false
     @State private var showStats = false
@@ -41,15 +40,12 @@ struct HomeView: View {
         .navigationDestination(isPresented: $showSettings) {
             SettingsView()
         }
-        .sheet(isPresented: $showTutorial) {
-            TutorialView(onComplete: {})
+        .navigationDestination(isPresented: $showTutorial) {
+            TutorialView()
         }
         .clearNavigationBackground()
         .onAppear {
             backgroundState.state = .menu
-            if tutorialManager.shouldShowTutorial {
-                showTutorial = true
-            }
         }
     }
 
@@ -136,9 +132,12 @@ struct HomeView: View {
             }
             .frame(maxWidth: 200)
 
-            HStack(spacing: BreachSpacing.xl) {
+            HStack(spacing: BreachSpacing.lg) {
                 SystemBarButton(icon: "chart.bar", label: "STATS", color: BreachColors.accentSecondary) {
                     transitionManager.transition { showStats = true }
+                }
+                SystemBarButton(icon: "questionmark.circle", label: "HELP", color: BreachColors.accent) {
+                    transitionManager.transition { showTutorial = true }
                 }
                 SystemBarButton(icon: "gearshape", label: "CONFIG", color: BreachColors.textSecondary) {
                     transitionManager.transition { showSettings = true }
@@ -257,86 +256,6 @@ struct SystemBarButton: View {
             )
         }
         .buttonStyle(.plain)
-    }
-}
-
-// MARK: - Difficulty Card
-
-struct DifficultyCard: View {
-    @Environment(\.horizontalSizeClass) var horizontalSizeClass
-    let difficulty: Difficulty
-    let isSelected: Bool
-    let isLocked: Bool
-    var starsEarned = 0
-    let action: () -> Void
-
-    private var isWide: Bool {
-        horizontalSizeClass == .regular
-    }
-
-    private var cardColor: Color {
-        switch difficulty {
-        case .easy: BreachColors.tierEasy
-        case .medium: BreachColors.tierMedium
-        case .hard: BreachColors.tierHard
-        case .expert: BreachColors.tierExpert
-        }
-    }
-
-    var body: some View {
-        Button(action: action) {
-            VStack(spacing: BreachSpacing.sm) {
-                if isLocked {
-                    Image(systemName: "lock.fill")
-                        .font(.system(size: isWide ? 32 : 24))
-                        .foregroundColor(BreachColors.textMuted)
-                } else {
-                    HStack(spacing: 2) {
-                        ForEach(0..<3, id: \.self) { i in
-                            Image(systemName: i < min(starsEarned, 3) ? "star.fill" : "star")
-                                .font(.system(size: isWide ? 14 : 10))
-                                .foregroundColor(
-                                    i < min(starsEarned, 3) ? BreachColors.starFilled : BreachColors.starEmpty
-                                )
-                        }
-                    }
-                }
-
-                Text(difficulty.displayName.uppercased())
-                    .font(BreachTypography.caption(isWide ? 14 : 12))
-                    .foregroundColor(
-                        isLocked ? BreachColors.textMuted : (isSelected ? cardColor : BreachColors.textPrimary)
-                    )
-
-                if isLocked {
-                    Text("LOCKED")
-                        .font(BreachTypography.caption(isWide ? 10 : 8))
-                        .foregroundColor(BreachColors.textMuted)
-                } else {
-                    HStack(spacing: BreachSpacing.xs) {
-                        Text("\(difficulty.sequenceCount) SEQ")
-                            .font(BreachTypography.caption(isWide ? 11 : 9))
-                        Text("\u{2022}")
-                        Text("\(difficulty.bufferSize) BUF")
-                            .font(BreachTypography.caption(isWide ? 11 : 9))
-                    }
-                    .foregroundColor(BreachColors.textMuted)
-                }
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, isWide ? BreachSpacing.xl : BreachSpacing.lg)
-            .background(isSelected && !isLocked ? cardColor.opacity(0.15) : BreachColors.surfacePrimary)
-            .overlay(
-                Rectangle()
-                    .stroke(
-                        isSelected && !isLocked ? cardColor : BreachColors.borderSecondary,
-                        lineWidth: isSelected && !isLocked ? 2 : 1
-                    )
-            )
-            .breachBevel(color: isSelected && !isLocked ? cardColor : BreachColors.accent)
-            .opacity(isLocked ? 0.6 : 1.0)
-        }
-        .disabled(isLocked)
     }
 }
 

@@ -40,6 +40,12 @@ class GameSettings: ObservableObject {
         didSet { save() }
     }
 
+    // MARK: - Game Settings
+
+    @Published var helpModeEnabled = false {
+        didSet { save() }
+    }
+
     // MARK: - Appearance Settings
 
     @Published var backgroundStyle: BackgroundStyle = .livingGrid {
@@ -96,6 +102,7 @@ class GameSettings: ObservableObject {
         static let unlockedDifficulties = "settings.unlockedDifficulties"
         static let difficultyStats = "stats.difficultyStats"
         static let gridRushStats = "stats.gridRushStats"
+        static let helpModeEnabled = "settings.helpModeEnabled"
     }
 
     // MARK: - Init
@@ -117,6 +124,10 @@ class GameSettings: ObservableObject {
 
         if defaults.object(forKey: Keys.hapticsEnabled) != nil {
             hapticsEnabled = defaults.bool(forKey: Keys.hapticsEnabled)
+        }
+
+        if defaults.object(forKey: Keys.helpModeEnabled) != nil {
+            helpModeEnabled = defaults.bool(forKey: Keys.helpModeEnabled)
         }
 
         // Load background style
@@ -157,6 +168,7 @@ class GameSettings: ObservableObject {
         let defaults = UserDefaults.standard
         defaults.set(soundEnabled, forKey: Keys.soundEnabled)
         defaults.set(hapticsEnabled, forKey: Keys.hapticsEnabled)
+        defaults.set(helpModeEnabled, forKey: Keys.helpModeEnabled)
         defaults.set(backgroundStyle.rawValue, forKey: Keys.backgroundStyle)
 
         // Save unlocked difficulties
@@ -202,6 +214,7 @@ class GameSettings: ObservableObject {
     }
 
     func recordGameResult(difficulty: Difficulty, stars: Int) {
+        guard !helpModeEnabled else { return }
         var stats = difficultyStats[difficulty] ?? DifficultyStats()
 
         stats.gamesPlayed += 1
@@ -228,6 +241,7 @@ class GameSettings: ObservableObject {
     // MARK: - Grid Rush Statistics Methods
 
     func recordGridRushResult(gridsCompleted: Int, score: Int, perfectClears: Int) {
+        guard !helpModeEnabled else { return }
         gridRushStats.totalRuns += 1
         gridRushStats.totalGridsCleared += gridsCompleted
         gridRushStats.totalPerfectClears += perfectClears
@@ -245,6 +259,7 @@ class GameSettings: ObservableObject {
     }
 
     func updateBestPerfectStreak(_ streak: Int) {
+        guard !helpModeEnabled else { return }
         if streak > gridRushStats.bestPerfectStreak {
             gridRushStats.bestPerfectStreak = streak
             save()
@@ -263,6 +278,7 @@ class GameSettings: ObservableObject {
     func resetAllSettings() {
         soundEnabled = true
         hapticsEnabled = true
+        helpModeEnabled = false
         resetProgress()
     }
 }

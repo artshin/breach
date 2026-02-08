@@ -99,28 +99,28 @@ struct CircuitTracesBackground: View {
     private var pulseSpeed: Double {
         switch state {
         case .menu:
-            30
+            15
         case .settings:
-            10
+            5
         case let .game(ratio):
-            60 + ratio * 40
+            30 + ratio * 20
         case .win:
-            100
+            50
         case .loss:
-            20
+            10
         }
     }
 
     private var spawnInterval: TimeInterval {
         switch state {
         case .menu:
-            3.0
-        case .settings:
             6.0
+        case .settings:
+            12.0
         case let .game(ratio):
-            2.0 - ratio * 1.0
+            4.0 - ratio * 2.0
         case .win, .loss:
-            1.0
+            2.0
         }
     }
 

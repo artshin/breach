@@ -6,6 +6,7 @@ struct GridRushView: View {
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
     @EnvironmentObject private var backgroundState: BackgroundStateManager
     @EnvironmentObject private var transitionManager: TransitionManager
+    @State private var showAbortConfirmation = false
 
     private var isWideLayout: Bool {
         horizontalSizeClass == .regular
@@ -26,7 +27,9 @@ struct GridRushView: View {
             if viewModel.gameState != nil {
                 // Main game content
                 VStack(spacing: BreachSpacing.md) {
-                    // Header with timer, grid counter, score
+                    rushHeaderSection
+
+                    // Timer, grid counter, score
                     GridRushHeaderView(
                         timeRemaining: viewModel.timeRemaining,
                         gridNumber: viewModel.currentGridNumber,
@@ -35,44 +38,9 @@ struct GridRushView: View {
                     .padding(.horizontal, BreachSpacing.lg)
 
                     if isWideLayout {
-                        // iPad: Side-by-side layout
-                        HStack(alignment: .top, spacing: BreachSpacing.lg) {
-                            // Left: Grid
-                            MatrixGridView(viewModel: viewModel)
-                                .frame(maxWidth: 400)
-
-                            // Right: Buffer and Sequences
-                            VStack(spacing: BreachSpacing.md) {
-                                BufferView(
-                                    buffer: viewModel.buffer,
-                                    bufferSize: viewModel.bufferSize
-                                )
-
-                                SequencePanelView(sequences: viewModel.sequences)
-
-                                Spacer()
-                            }
-                            .frame(maxWidth: 300)
-                        }
-                        .padding(.horizontal, BreachSpacing.lg)
+                        rushWideLayout
                     } else {
-                        // iPhone: Stacked layout
-                        VStack(spacing: BreachSpacing.md) {
-                            // Buffer
-                            BufferView(
-                                buffer: viewModel.buffer,
-                                bufferSize: viewModel.bufferSize
-                            )
-                            .padding(.horizontal, BreachSpacing.lg)
-
-                            // Grid
-                            MatrixGridView(viewModel: viewModel)
-                                .padding(.horizontal, BreachSpacing.sm)
-
-                            // Sequences
-                            SequencePanelView(sequences: viewModel.sequences)
-                                .padding(.horizontal, BreachSpacing.lg)
-                        }
+                        rushCompactLayout
                     }
 
                     Spacer()
@@ -107,38 +75,8 @@ struct GridRushView: View {
             }
         }
         .navigationBarBackButtonHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
         .clearNavigationBackground()
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button {
-                    viewModel.pauseTimer()
-                    transitionManager.transition {
-                        dismiss()
-                    }
-                } label: {
-                    HStack(spacing: 4) {
-                        Image(systemName: "chevron.left")
-                        Text("EXIT")
-                    }
-                    .font(BreachTypography.caption())
-                    .foregroundColor(BreachColors.accent)
-                }
-            }
-
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button {
-                    if viewModel.isPaused {
-                        viewModel.resumeTimer()
-                    } else {
-                        viewModel.pauseTimer()
-                    }
-                } label: {
-                    Image(systemName: viewModel.isPaused ? "play.fill" : "pause.fill")
-                        .font(.system(size: 16))
-                        .foregroundColor(BreachColors.accent)
-                }
-            }
-        }
         .onAppear {
             syncBackground()
             viewModel.startNewRun()
@@ -147,6 +85,110 @@ struct GridRushView: View {
         .onDisappear {
             viewModel.pauseTimer()
         }
+        .alert("ABORT RUN", isPresented: $showAbortConfirmation) {
+            Button("ABORT", role: .destructive) {
+                viewModel.pauseTimer()
+                transitionManager.transition { dismiss() }
+            }
+            Button("CONTINUE", role: .cancel) {
+                viewModel.resumeTimer()
+            }
+        } message: {
+            Text("Current run progress will be lost.")
+        }
+    }
+
+    // MARK: - Rush Header
+
+    private var rushHeaderSection: some View {
+        HStack {
+            // Abort Button
+            Button {
+                viewModel.pauseTimer()
+                showAbortConfirmation = true
+            } label: {
+                HStack(spacing: BreachSpacing.xs) {
+                    Image(systemName: "xmark.octagon.fill")
+                        .font(.system(size: 14, weight: .bold))
+                    Text("ABORT")
+                        .font(BreachTypography.caption())
+                }
+                .foregroundColor(BreachColors.danger)
+            }
+
+            Spacer()
+
+            VStack(spacing: 2) {
+                Text("GRID RUSH")
+                    .font(BreachTypography.heading(16))
+                    .foregroundColor(BreachColors.accentHighlight)
+
+                if GameSettings.shared.helpModeEnabled {
+                    Text("HELP MODE · UNRANKED")
+                        .font(BreachTypography.caption(9))
+                        .foregroundColor(BreachColors.warning)
+                }
+            }
+
+            Spacer()
+
+            // Pause Button
+            Button {
+                if viewModel.isPaused {
+                    viewModel.resumeTimer()
+                } else {
+                    viewModel.pauseTimer()
+                }
+            } label: {
+                Image(systemName: viewModel.isPaused ? "play.fill" : "pause.fill")
+                    .font(.system(size: 16))
+                    .foregroundColor(BreachColors.accent)
+            }
+        }
+        .padding(.horizontal, BreachSpacing.lg)
+        .padding(.vertical, BreachSpacing.sm)
+    }
+
+    // MARK: - Rush Compact Layout
+
+    private var rushCompactLayout: some View {
+        VStack(spacing: BreachSpacing.md) {
+            SequencePanelView(sequences: viewModel.sequences)
+                .padding(.horizontal, BreachSpacing.lg)
+
+            BufferView(
+                buffer: viewModel.buffer,
+                bufferSize: viewModel.bufferSize
+            )
+            .padding(.horizontal, BreachSpacing.lg)
+
+            MatrixGridView(viewModel: viewModel)
+                .padding(.horizontal, BreachSpacing.sm)
+        }
+    }
+
+    // MARK: - Rush Wide Layout
+
+    private var rushWideLayout: some View {
+        HStack(alignment: .top, spacing: BreachSpacing.lg) {
+            // Left: Grid
+            MatrixGridView(viewModel: viewModel)
+                .frame(maxWidth: 400)
+
+            // Right: Sequences and Buffer
+            VStack(spacing: BreachSpacing.md) {
+                SequencePanelView(sequences: viewModel.sequences)
+
+                BufferView(
+                    buffer: viewModel.buffer,
+                    bufferSize: viewModel.bufferSize
+                )
+
+                Spacer()
+            }
+            .frame(maxWidth: 300)
+        }
+        .padding(.horizontal, BreachSpacing.lg)
     }
 }
 

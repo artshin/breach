@@ -17,6 +17,7 @@ struct ContentView: View {
         }
         .environmentObject(backgroundState)
         .environmentObject(transitionManager)
+        .onAppear { transitionManager.installTouchTracker() }
     }
 }
 
