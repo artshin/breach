@@ -58,8 +58,6 @@ playground.xcworkspace
 # Build analysis
 release-build-analysis/
 
-# Screenshots pipeline
-scripts/screenshots/raw/
-scripts/screenshots/backgrounds/
+# Screenshots pipeline (raw/ and backgrounds/ tracked via Git LFS)
 scripts/screenshots/output/
 scripts/screenshots/.venv/
