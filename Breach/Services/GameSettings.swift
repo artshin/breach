@@ -266,6 +266,60 @@ class GameSettings: ObservableObject {
         }
     }
 
+    // MARK: - Screenshot Mode
+
+    /// Loads appealing mock data for App Store screenshots.
+    /// Called once at launch when `-SCREENSHOT_MODE` argument is present.
+    func loadScreenshotData() {
+        isLoading = true
+        defer {
+            isLoading = false
+            save()
+        }
+
+        unlockedDifficulties = Set(Difficulty.allCases)
+
+        difficultyStats = [
+            .easy: DifficultyStats(
+                gamesPlayed: 15,
+                gamesWon: 12,
+                totalStars: 9,
+                bestStreak: 7,
+                currentStreak: 3
+            ),
+            .medium: DifficultyStats(
+                gamesPlayed: 8,
+                gamesWon: 6,
+                totalStars: 6,
+                bestStreak: 4,
+                currentStreak: 2
+            ),
+            .hard: DifficultyStats(
+                gamesPlayed: 4,
+                gamesWon: 2,
+                totalStars: 3,
+                bestStreak: 2,
+                currentStreak: 0
+            ),
+            .expert: DifficultyStats(
+                gamesPlayed: 2,
+                gamesWon: 1,
+                totalStars: 1,
+                bestStreak: 1,
+                currentStreak: 0
+            )
+        ]
+
+        gridRushStats = GridRushStats(
+            totalRuns: 12,
+            bestGridsCleared: 8,
+            highScore: 2450,
+            totalGridsCleared: 42,
+            bestPerfectStreak: 5,
+            totalPerfectClears: 15
+        )
+    }
+
     // MARK: - Reset
 
     func resetProgress() {

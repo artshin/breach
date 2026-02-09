@@ -193,7 +193,7 @@ private class ClearNavigationController: UIViewController {
 // MARK: - Hex Swipe Back
 
 private struct HexSwipeBackModifier: ViewModifier {
-    @EnvironmentObject private var transitionManager: TransitionManager
+    @Environment(TransitionManager.self) private var transitionManager
 
     func body(content: Content) -> some View {
         content.background(

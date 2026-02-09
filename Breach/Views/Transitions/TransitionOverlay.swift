@@ -3,7 +3,7 @@ import SwiftUI
 // MARK: - Transition Overlay
 
 struct TransitionOverlay: View {
-    @EnvironmentObject private var manager: TransitionManager
+    @Environment(TransitionManager.self) private var manager
 
     var body: some View {
         if manager.isActive {

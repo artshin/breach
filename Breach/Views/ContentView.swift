@@ -1,8 +1,8 @@
 import SwiftUI
 
 struct ContentView: View {
-    @StateObject private var backgroundState = BackgroundStateManager()
-    @StateObject private var transitionManager = TransitionManager()
+    @State private var backgroundState = BackgroundStateManager()
+    @State private var transitionManager = TransitionManager()
 
     var body: some View {
         ZStack {
@@ -15,8 +15,8 @@ struct ContentView: View {
 
             TransitionOverlay()
         }
-        .environmentObject(backgroundState)
-        .environmentObject(transitionManager)
+        .environment(backgroundState)
+        .environment(transitionManager)
         .onAppear { transitionManager.installTouchTracker() }
     }
 }

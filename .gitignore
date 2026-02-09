@@ -57,3 +57,8 @@ playground.xcworkspace
 
 # Build analysis
 release-build-analysis/
+
+# Screenshots pipeline
+scripts/screenshots/raw/
+scripts/screenshots/backgrounds/
+scripts/screenshots/output/

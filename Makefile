@@ -21,7 +21,7 @@ DERIVED_DATA := $(BUILD_DIR)/DerivedData
 # Default simulator
 SIMULATOR := iPhone 16 Pro
 
-.PHONY: all build release release-profile run device clean generate list-devices lint lint-fix format format-check quality help
+.PHONY: all build release release-profile run device clean generate list-devices lint lint-fix format format-check quality screenshots help
 
 all: help
 
@@ -182,6 +182,16 @@ format-check:
 # Run all quality checks (no changes, report only)
 quality: lint format-check
 
+# ─── Screenshots ─────────────────────────────────────────────────────────────
+
+# Capture and composite App Store screenshots
+screenshots:
+	@echo "==> Step 1: Capture raw screenshots from simulators..."
+	@bash scripts/screenshots/capture.sh
+	@echo ""
+	@echo "==> Step 2: Composite final App Store images..."
+	@python3 scripts/screenshots/composite.py
+
 # Help
 help:
 	@echo "Breach iOS App Makefile"
@@ -204,6 +214,9 @@ help:
 	@echo "  make format             - Format code with SwiftFormat"
 	@echo "  make format-check       - Check formatting (no changes)"
 	@echo "  make quality            - Run all checks (lint + format-check)"
+	@echo ""
+	@echo "Screenshots:"
+	@echo "  make screenshots        - Capture and composite App Store screenshots"
 	@echo ""
 	@echo "Examples:"
 	@echo "  make device DEVICE=Daedalus"

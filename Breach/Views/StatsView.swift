@@ -2,7 +2,7 @@ import SwiftUI
 
 struct StatsView: View {
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject private var transitionManager: TransitionManager
+    @Environment(TransitionManager.self) private var transitionManager
     @ObservedObject private var settings = GameSettings.shared
 
     var body: some View {
@@ -328,6 +328,6 @@ struct StatItem: View {
             StatsView()
         }
     }
-    .environmentObject(BackgroundStateManager())
-    .environmentObject(TransitionManager())
+    .environment(BackgroundStateManager())
+    .environment(TransitionManager())
 }

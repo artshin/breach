@@ -42,8 +42,8 @@ struct ModeConfigView: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
-    @EnvironmentObject private var backgroundState: BackgroundStateManager
-    @EnvironmentObject private var transitionManager: TransitionManager
+    @Environment(BackgroundStateManager.self) private var backgroundState
+    @Environment(TransitionManager.self) private var transitionManager
     @ObservedObject private var settings = GameSettings.shared
     @State private var selectedDifficulty: Difficulty = .easy
     @State private var showingGame = false
@@ -366,6 +366,6 @@ struct DifficultyRow: View {
             ModeConfigView(mode: .standard)
         }
     }
-    .environmentObject(BackgroundStateManager())
-    .environmentObject(TransitionManager())
+    .environment(BackgroundStateManager())
+    .environment(TransitionManager())
 }

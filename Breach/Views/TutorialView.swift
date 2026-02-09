@@ -9,7 +9,7 @@ struct TutorialStep {
 
 struct TutorialView: View {
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject private var transitionManager: TransitionManager
+    @Environment(TransitionManager.self) private var transitionManager
     @State private var currentStep = 0
 
     // swiftlint:disable line_length
@@ -181,6 +181,6 @@ struct TutorialView: View {
             TutorialView()
         }
     }
-    .environmentObject(BackgroundStateManager())
-    .environmentObject(TransitionManager())
+    .environment(BackgroundStateManager())
+    .environment(TransitionManager())
 }

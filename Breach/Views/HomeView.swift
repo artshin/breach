@@ -2,13 +2,16 @@ import SwiftUI
 
 struct HomeView: View {
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
-    @EnvironmentObject private var backgroundState: BackgroundStateManager
-    @EnvironmentObject private var transitionManager: TransitionManager
+    @Environment(BackgroundStateManager.self) private var backgroundState
+    @Environment(TransitionManager.self) private var transitionManager
+    private var screenshotRouter = ScreenshotRouter.shared
     @State private var selectedMode: GameMode = .standard
     @State private var showModeConfig = false
     @State private var showStats = false
     @State private var showSettings = false
     @State private var showTutorial = false
+    @State private var showGameplay = false
+    @State private var showGridRush = false
 
     private var isWideLayout: Bool {
         horizontalSizeClass == .regular
@@ -43,9 +46,19 @@ struct HomeView: View {
         .navigationDestination(isPresented: $showTutorial) {
             TutorialView()
         }
+        .navigationDestination(isPresented: $showGameplay) {
+            GameView(difficulty: .medium)
+        }
+        .navigationDestination(isPresented: $showGridRush) {
+            GridRushView()
+        }
         .clearNavigationBackground()
         .onAppear {
             backgroundState.state = .menu
+        }
+        .onChange(of: screenshotRouter.pendingRoute) { _, route in
+            guard let route else { return }
+            handleScreenshotRoute(route)
         }
     }
 
@@ -142,6 +155,34 @@ struct HomeView: View {
                 SystemBarButton(icon: "gearshape", label: "CONFIG", color: BreachColors.textSecondary) {
                     transitionManager.transition { showSettings = true }
                 }
+            }
+        }
+    }
+
+    private func handleScreenshotRoute(_ route: ScreenshotRoute) {
+        screenshotRouter.pendingRoute = nil
+        // Dismiss any currently shown screen first
+        showModeConfig = false
+        showStats = false
+        showSettings = false
+        showTutorial = false
+        showGameplay = false
+        showGridRush = false
+
+        // Delay to let dismissal complete before navigating
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            switch route {
+            case .home:
+                break // Already on home
+            case .gameplay:
+                showGameplay = true
+            case .gridRush:
+                showGridRush = true
+            case .difficulty:
+                selectedMode = .standard
+                showModeConfig = true
+            case .stats:
+                showStats = true
             }
         }
     }
@@ -266,8 +307,8 @@ struct SystemBarButton: View {
             HomeView()
         }
     }
-    .environmentObject(BackgroundStateManager())
-    .environmentObject(TransitionManager())
+    .environment(BackgroundStateManager())
+    .environment(TransitionManager())
     .onAppear {
         GameSettings.shared.backgroundStyle = .circuitTraces
     }

@@ -2,7 +2,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject private var transitionManager: TransitionManager
+    @Environment(TransitionManager.self) private var transitionManager
     @ObservedObject private var settings = GameSettings.shared
 
     @State private var showResetConfirmation = false
@@ -373,6 +373,6 @@ struct MiniBackgroundPreview: View {
             SettingsView()
         }
     }
-    .environmentObject(BackgroundStateManager())
-    .environmentObject(TransitionManager())
+    .environment(BackgroundStateManager())
+    .environment(TransitionManager())
 }

@@ -1,3 +1,4 @@
+import Observation
 import SwiftUI
 
 // MARK: - Transition Style
@@ -26,10 +27,10 @@ struct DissolveCell {
 
 // MARK: - Transition Manager
 
-@MainActor
-final class TransitionManager: ObservableObject {
-    @Published private(set) var phase: TransitionPhase = .idle
-    @Published private(set) var style: TransitionStyle = .hexDissolve
+@MainActor @Observable
+final class TransitionManager {
+    private(set) var phase: TransitionPhase = .idle
+    private(set) var style: TransitionStyle = .hexDissolve
 
     let gridCols = 20
     let gridRows = 36

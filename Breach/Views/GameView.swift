@@ -4,8 +4,8 @@ struct GameView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
     @Environment(\.verticalSizeClass) var verticalSizeClass
-    @EnvironmentObject private var backgroundState: BackgroundStateManager
-    @EnvironmentObject private var transitionManager: TransitionManager
+    @Environment(BackgroundStateManager.self) private var backgroundState
+    @Environment(TransitionManager.self) private var transitionManager
     @StateObject private var viewModel: GameViewModel
     @State private var showAbortConfirmation = false
 
@@ -226,6 +226,6 @@ struct DifficultyBadge: View {
             GameView(difficulty: .easy)
         }
     }
-    .environmentObject(BackgroundStateManager())
-    .environmentObject(TransitionManager())
+    .environment(BackgroundStateManager())
+    .environment(TransitionManager())
 }

@@ -1,0 +1,61 @@
+{
+  "devices": {
+    "6.9": {
+      "name": "iPhone 17 Pro Max",
+      "width": 1320,
+      "height": 2868
+    },
+    "6.3": {
+      "name": "iPhone 17 Pro",
+      "width": 1206,
+      "height": 2622
+    }
+  },
+  "screenshots": [
+    {
+      "id": "01_home",
+      "title": "BREACH THE SYSTEM",
+      "subtitle": "Hack your way through the matrix",
+      "accent": "#00FFCC"
+    },
+    {
+      "id": "02_gameplay",
+      "title": "DECODE THE GRID",
+      "subtitle": "Match sequences before time runs out",
+      "accent": "#00E5FF"
+    },
+    {
+      "id": "03_grid_rush",
+      "title": "GRID RUSH",
+      "subtitle": "Endless puzzles. One life. No mercy.",
+      "accent": "#FF3366"
+    },
+    {
+      "id": "04_difficulty",
+      "title": "ESCALATING CHALLENGE",
+      "subtitle": "From rookie to elite netrunner",
+      "accent": "#FFB800"
+    },
+    {
+      "id": "05_stats",
+      "title": "YOUR STATS",
+      "subtitle": "Track every breach attempt",
+      "accent": "#9D4EDD"
+    }
+  ],
+  "layout": {
+    "phone_scale": 0.72,
+    "phone_y_offset": 0.18,
+    "title_y": 0.06,
+    "subtitle_y": 0.11,
+    "shadow_offset": 12,
+    "shadow_blur": 40,
+    "corner_radius": 55,
+    "glow_radius": 6
+  },
+  "background": {
+    "fallback_color": "#0A0A12",
+    "gradient_top": "#0A0A12",
+    "gradient_bottom": "#1A0A2E"
+  }
+}

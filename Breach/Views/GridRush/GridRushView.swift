@@ -4,8 +4,8 @@ struct GridRushView: View {
     @StateObject private var viewModel = GridRushViewModel()
     @Environment(\.dismiss) private var dismiss
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
-    @EnvironmentObject private var backgroundState: BackgroundStateManager
-    @EnvironmentObject private var transitionManager: TransitionManager
+    @Environment(BackgroundStateManager.self) private var backgroundState
+    @Environment(TransitionManager.self) private var transitionManager
     @State private var showAbortConfirmation = false
 
     private var isWideLayout: Bool {
@@ -199,6 +199,6 @@ struct GridRushView: View {
             GridRushView()
         }
     }
-    .environmentObject(BackgroundStateManager())
-    .environmentObject(TransitionManager())
+    .environment(BackgroundStateManager())
+    .environment(TransitionManager())
 }

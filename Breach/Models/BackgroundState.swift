@@ -1,3 +1,4 @@
+import Observation
 import SwiftUI
 
 /// Represents the current game state for background animation purposes
@@ -27,8 +28,9 @@ enum BackgroundGameState: Equatable {
 
 /// Shared background state manager injected via EnvironmentObject.
 /// Lives at the NavigationStack root so all pushed screens share the same animated background.
-class BackgroundStateManager: ObservableObject {
-    @Published var state: BackgroundGameState = .menu
+@Observable
+class BackgroundStateManager {
+    var state: BackgroundGameState = .menu
 }
 
 /// Available background animation styles
