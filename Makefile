@@ -21,7 +21,7 @@ DERIVED_DATA := $(BUILD_DIR)/DerivedData
 # Default simulator
 SIMULATOR := iPhone 16 Pro
 
-.PHONY: all build release release-profile run device clean generate list-devices lint lint-fix format format-check quality screenshots help
+.PHONY: all build release release-profile run device clean generate list-devices lint lint-fix format format-check quality screenshots generate-backgrounds help
 
 all: help
 
@@ -184,6 +184,18 @@ quality: lint format-check
 
 # ─── Screenshots ─────────────────────────────────────────────────────────────
 
+# Generate AI backgrounds for App Store screenshots (requires GPU + venv)
+generate-backgrounds:
+	@echo "==> Generating AI backgrounds (SDXL on GPU)..."
+	@if [ ! -d scripts/screenshots/.venv ]; then \
+		echo "Error: venv not found. Set up with:"; \
+		echo "  cd scripts/screenshots && uv venv .venv --python 3.12"; \
+		echo "  uv pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128"; \
+		echo "  uv pip install diffusers transformers accelerate safetensors"; \
+		exit 1; \
+	fi
+	@scripts/screenshots/.venv/bin/python3 scripts/screenshots/generate_backgrounds.py
+
 # Capture and composite App Store screenshots
 screenshots:
 	@echo "==> Step 1: Capture raw screenshots from simulators..."
@@ -216,6 +228,7 @@ help:
 	@echo "  make quality            - Run all checks (lint + format-check)"
 	@echo ""
 	@echo "Screenshots:"
+	@echo "  make generate-backgrounds - Generate AI backgrounds (GPU required)"
 	@echo "  make screenshots        - Capture and composite App Store screenshots"
 	@echo ""
 	@echo "Examples:"

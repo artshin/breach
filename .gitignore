@@ -62,3 +62,4 @@ release-build-analysis/
 scripts/screenshots/raw/
 scripts/screenshots/backgrounds/
 scripts/screenshots/output/
+scripts/screenshots/.venv/
