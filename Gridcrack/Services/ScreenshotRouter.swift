@@ -23,7 +23,7 @@ class ScreenshotRouter {
 
     func handle(url: URL) {
         guard isEnabled,
-              url.scheme == "breach",
+              url.scheme == "gridcrack",
               let host = url.host,
               let route = ScreenshotRoute(rawValue: host)
         else { return }

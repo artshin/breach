@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 # capture.sh — Automated App Store screenshot capture via deep links.
 # Boots simulators, installs app with SCREENSHOT_MODE, navigates via
-# breach:// URL scheme, and captures each screen automatically.
+# gridcrack:// URL scheme, and captures each screen automatically.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 RAW_DIR="$SCRIPT_DIR/raw"
 BUILD_DIR="$PROJECT_ROOT/build/DerivedData"
-BUNDLE_ID="com.artshin.breach"
-SCHEME="Breach"
-PROJECT="Breach.xcodeproj"
+BUNDLE_ID="com.artshin.gridcrack"
+SCHEME="Gridcrack"
+PROJECT="Gridcrack.xcodeproj"
 
 # Device definitions (parallel arrays — bash 3.2 compatible)
 # App targets iOS 26+, so we use iOS 26 simulator runtimes
@@ -71,8 +71,8 @@ capture_device() {
         local route="${SCREEN_URLS[$i]}"
         local outfile="$RAW_DIR/${screen_id}_${size_label}.png"
 
-        echo -n "    [$size_label\"] $screen_id → breach://$route ..."
-        xcrun simctl openurl "$sim_name" "breach://$route"
+        echo -n "    [$size_label\"] $screen_id → gridcrack://$route ..."
+        xcrun simctl openurl "$sim_name" "gridcrack://$route"
         sleep "$SETTLE_TIME"
         xcrun simctl io "$sim_name" screenshot "$outfile"
         echo " captured"

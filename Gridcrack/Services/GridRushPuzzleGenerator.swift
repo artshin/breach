@@ -96,20 +96,21 @@ enum GridRushPuzzleGenerator {
     ) -> (sequences: [[String]], merged: [String]) {
         let codes = Cell.availableCodes
         let count = stage.sequenceCount
-        let seqLen = GridRushConfig.sequenceLength
 
         if count == 1 {
-            let seq = (0..<seqLen).map { _ in codes.randomElement()! }
+            let length = Int.random(in: 3...4)
+            let seq = (0..<length).map { _ in codes.randomElement()! }
             return ([seq], seq)
-        } else if count == 2 {
-            return PuzzleGeneratorCore.designOverlappingSequences(
-                count: 2, overlapSize: 1, sequenceLength: seqLen, codes: codes
-            )
-        } else {
-            return PuzzleGeneratorCore.designChainedSequences(
-                count: count, sequenceLength: seqLen, codes: codes
-            )
         }
+
+        let overlapSize = count >= 3 ? 2 : 1
+        let merged = Int.random(in: 5...6)
+        let lengths = PuzzleGeneratorCore.randomLengths(
+            mergedLength: merged, count: count, overlapSize: overlapSize
+        )
+        return PuzzleGeneratorCore.designVariableSequences(
+            lengths: lengths, overlapSize: overlapSize, codes: codes
+        )
     }
 
     // MARK: - Special Cell Placement

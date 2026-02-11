@@ -1,4 +1,4 @@
-# Breach iOS App Makefile
+# Gridcrack iOS App Makefile
 # Usage:
 #   make build          - Build for simulator (Debug)
 #   make release        - Build for device (Release)
@@ -8,9 +8,9 @@
 #   make generate       - Regenerate Xcode project from project.yml
 
 # Project settings
-PROJECT := Breach.xcodeproj
-SCHEME := Breach
-BUNDLE_ID := com.artshin.breach
+PROJECT := Gridcrack.xcodeproj
+SCHEME := Gridcrack
+BUNDLE_ID := com.artshin.gridcrack
 CONFIGURATION_DEBUG := Debug
 CONFIGURATION_RELEASE := Release
 
@@ -163,7 +163,7 @@ lint-fix:
 format:
 	@if command -v swiftformat >/dev/null 2>&1; then \
 		echo "Running SwiftFormat..."; \
-		swiftformat Breach; \
+		swiftformat Gridcrack; \
 	else \
 		echo "Error: swiftformat not found. Install with: brew install swiftformat"; \
 		exit 1; \
@@ -173,7 +173,7 @@ format:
 format-check:
 	@if command -v swiftformat >/dev/null 2>&1; then \
 		echo "Checking formatting..."; \
-		swiftformat Breach --lint; \
+		swiftformat Gridcrack --lint; \
 	else \
 		echo "Error: swiftformat not found. Install with: brew install swiftformat"; \
 		exit 1; \
@@ -206,7 +206,7 @@ screenshots:
 
 # Help
 help:
-	@echo "Breach iOS App Makefile"
+	@echo "Gridcrack iOS App Makefile"
 	@echo ""
 	@echo "Usage:"
 	@echo "  make build              - Build for simulator (Debug)"

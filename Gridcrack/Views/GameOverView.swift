@@ -157,10 +157,10 @@ struct GameOverView: View {
 
     private var titleText: String {
         switch stars {
-        case 3: "OPTIMAL BREACH"
+        case 3: "PERFECT CRACK"
         case 2: "ACCESS GRANTED"
-        case 1: "PARTIAL BREACH"
-        default: "BREACH FAILED"
+        case 1: "PARTIAL CRACK"
+        default: "CRACK FAILED"
         }
     }
 

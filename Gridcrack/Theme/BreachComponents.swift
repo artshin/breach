@@ -7,6 +7,8 @@ struct BreachButton: View {
     let color: Color
     let action: () -> Void
 
+    @State private var glowPulse = false
+
     init(_ title: String, color: Color = BreachColors.accent, action: @escaping () -> Void) {
         self.title = title
         self.color = color
@@ -15,19 +17,56 @@ struct BreachButton: View {
 
     var body: some View {
         Button(action: action) {
+            VStack(spacing: 0) {
+                color.frame(height: 2)
+                    .shadow(color: color.opacity(0.6), radius: 4, y: 2)
+                buttonContent
+            }
+            .frame(minWidth: 180)
+            .background(buttonBackground)
+            .overlay(buttonBorder)
+        }
+        .buttonStyle(.plain)
+        .onAppear(perform: startGlowPulse)
+    }
+
+    private var buttonContent: some View {
+        VStack(spacing: 3) {
+            Text(">> \(title) <<")
+                .font(.system(size: 9, weight: .bold, design: .monospaced))
+                .foregroundColor(color.opacity(0.3))
             Text(title)
-                .font(BreachTypography.body(14))
-                .fontWeight(.bold)
+                .font(BreachTypography.code(15))
                 .foregroundColor(color)
-                .padding(.horizontal, BreachSpacing.xl)
-                .padding(.vertical, BreachSpacing.md)
-                .frame(minWidth: 140)
-                .breachGlass(tint: color)
-                .overlay(
-                    Rectangle()
-                        .stroke(color, lineWidth: 1)
+                .shadow(
+                    color: color.opacity(glowPulse ? 0.5 : 0.2),
+                    radius: glowPulse ? 10 : 4
                 )
-                .breachBevel(color: color)
+        }
+        .padding(.horizontal, BreachSpacing.xl)
+        .padding(.vertical, BreachSpacing.md)
+    }
+
+    private var buttonBackground: some View {
+        ZStack {
+            BreachColors.surfacePrimary.opacity(0.9)
+            LinearGradient(
+                colors: [color.opacity(0.15), color.opacity(0.04), .clear],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        }
+    }
+
+    private var buttonBorder: some View {
+        Rectangle()
+            .stroke(color.opacity(glowPulse ? 0.35 : 0.2), lineWidth: 1)
+            .shadow(color: color.opacity(glowPulse ? 0.15 : 0), radius: glowPulse ? 8 : 0)
+    }
+
+    private func startGlowPulse() {
+        withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
+            glowPulse = true
         }
     }
 }
@@ -48,19 +87,19 @@ struct BreachOutlineButton: View {
     var body: some View {
         Button(action: action) {
             Text(title)
-                .font(BreachTypography.body(14))
-                .fontWeight(.bold)
+                .font(BreachTypography.code(13))
                 .foregroundColor(color)
                 .padding(.horizontal, BreachSpacing.xl)
                 .padding(.vertical, BreachSpacing.md)
                 .frame(minWidth: 140)
-                .breachGlass(tint: color, opacity: 0.08)
-                .overlay(
-                    Rectangle()
-                        .stroke(color.opacity(0.5), lineWidth: 1)
-                )
-                .breachBevel(color: color, intensity: 0.6)
+                .background(BreachColors.surfacePrimary.opacity(0.6))
+                .background(color.opacity(0.04))
+                .overlay(Rectangle().stroke(color.opacity(0.2), lineWidth: 1))
+                .overlay(alignment: .leading) {
+                    color.opacity(0.5).frame(width: 2)
+                }
         }
+        .buttonStyle(.plain)
     }
 }
 
@@ -304,7 +343,7 @@ struct ScanlineOverlay: View {
         BreachColors.background.ignoresSafeArea()
 
         VStack(spacing: 20) {
-            GlowingText("BREACH PROTOCOL")
+            GlowingText("GRIDCRACK")
 
             BreachPanel {
                 VStack(alignment: .leading) {

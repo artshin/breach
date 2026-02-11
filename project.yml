@@ -1,4 +1,4 @@
-name: Breach
+name: Gridcrack
 options:
   bundleIdPrefix: com.artshin
   deploymentTarget:
@@ -6,14 +6,14 @@ options:
   xcodeVersion: "26.0"
 
 targets:
-  Breach:
+  Gridcrack:
     type: application
     platform: iOS
     sources:
-      - Breach
+      - Gridcrack
     settings:
-      PRODUCT_BUNDLE_IDENTIFIER: com.artshin.breach
-      INFOPLIST_FILE: Breach/Info.plist
+      PRODUCT_BUNDLE_IDENTIFIER: com.artshin.gridcrack
+      INFOPLIST_FILE: Gridcrack/Info.plist
       DEVELOPMENT_TEAM: SC5KNP7Z9L
       GENERATE_INFOPLIST_FILE: NO
       SWIFT_VERSION: "5.9"

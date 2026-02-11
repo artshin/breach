@@ -83,9 +83,9 @@ struct HomeView: View {
             .padding(.horizontal, BreachSpacing.xxl)
             .frame(maxWidth: 400)
 
-            GlowingText("BREACH", font: BreachTypography.title(titleSize))
+            GlowingText("GRIDCRACK", font: BreachTypography.title(titleSize))
 
-            Text("PROTOCOL")
+            Text("// CODE PUZZLE")
                 .font(BreachTypography.heading(subtitleSize))
                 .foregroundColor(BreachColors.accent.opacity(0.7))
                 .tracking(isWideLayout ? 12 : 8)
@@ -112,7 +112,7 @@ struct HomeView: View {
         HStack(spacing: BreachSpacing.md) {
             HeroModeButton(
                 title: "STANDARD",
-                subtitle: "Breach the protocol",
+                subtitle: "Crack the grid",
                 icon: "terminal",
                 tag: "SYS://01",
                 color: BreachColors.accent

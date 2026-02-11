@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct BreachApp: App {
+struct GridcrackApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     init() {

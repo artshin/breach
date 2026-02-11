@@ -14,8 +14,8 @@
   "screenshots": [
     {
       "id": "01_home",
-      "title": "BREACH THE SYSTEM",
-      "subtitle": "Hack your way through the matrix",
+      "title": "CRACK THE GRID",
+      "subtitle": "Hack your way through the grid",
       "accent": "#00FFCC"
     },
     {
@@ -33,13 +33,13 @@
     {
       "id": "04_difficulty",
       "title": "ESCALATING CHALLENGE",
-      "subtitle": "From rookie to elite netrunner",
+      "subtitle": "From rookie to elite cracker",
       "accent": "#FFB800"
     },
     {
       "id": "05_stats",
       "title": "YOUR STATS",
-      "subtitle": "Track every breach attempt",
+      "subtitle": "Track every crack attempt",
       "accent": "#9D4EDD"
     }
   ],

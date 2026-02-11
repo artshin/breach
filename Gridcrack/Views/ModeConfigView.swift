@@ -15,7 +15,7 @@ enum GameMode {
 
     var description: String {
         switch self {
-        case .standard: "Select difficulty and breach the protocol. Complete sequences within the buffer limit."
+        case .standard: "Select difficulty and crack the grid. Complete sequences within the buffer limit."
         case .gridRush: "Race against the clock. Clear grids to earn bonus time and rack up your score."
         }
     }
@@ -243,7 +243,7 @@ struct ModeConfigView: View {
     private var actionButton: some View {
         VStack(spacing: BreachSpacing.md) {
             BreachButton(
-                mode == .standard ? "INITIATE BREACH" : "START RUN",
+                mode == .standard ? "CRACK IT" : "START RUN",
                 color: mode.color
             ) {
                 transitionManager.transition(style: .breachInitiated) {

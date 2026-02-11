@@ -1,9 +1,9 @@
-# SwiftLint Configuration for Breach
+# SwiftLint Configuration for Gridcrack
 # Strict but sensible rules matching project conventions
 
 # Paths to include
 included:
-  - Breach
+  - Gridcrack
 
 # Paths to exclude
 excluded:

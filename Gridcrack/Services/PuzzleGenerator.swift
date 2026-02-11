@@ -73,22 +73,33 @@ enum PuzzleGenerator {
 
         switch difficulty {
         case .easy:
-            let seq = (0..<3).map { _ in codes.randomElement()! }
+            let length = Int.random(in: 3...4)
+            let seq = (0..<length).map { _ in codes.randomElement()! }
             return ([seq], seq)
 
         case .medium:
-            return PuzzleGeneratorCore.designOverlappingSequences(
-                count: 2, overlapSize: 2, sequenceLength: 3, codes: codes
+            let lengths = PuzzleGeneratorCore.randomLengths(
+                mergedLength: 4, count: 2, overlapSize: 2
+            )
+            return PuzzleGeneratorCore.designVariableSequences(
+                lengths: lengths, overlapSize: 2, codes: codes
             )
 
         case .hard:
-            return PuzzleGeneratorCore.designOverlappingSequences(
-                count: 2, overlapSize: 1, sequenceLength: 3, codes: codes
+            let merged = 5
+            let lengths = PuzzleGeneratorCore.randomLengths(
+                mergedLength: merged, count: 2, overlapSize: 1
+            )
+            return PuzzleGeneratorCore.designVariableSequences(
+                lengths: lengths, overlapSize: 1, codes: codes
             )
 
         case .expert:
-            return PuzzleGeneratorCore.designChainedSequences(
-                count: 3, sequenceLength: 3, codes: codes
+            let lengths = PuzzleGeneratorCore.randomLengths(
+                mergedLength: 5, count: 3, overlapSize: 2
+            )
+            return PuzzleGeneratorCore.designVariableSequences(
+                lengths: lengths, overlapSize: 2, codes: codes
             )
         }
     }

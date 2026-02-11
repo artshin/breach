@@ -97,37 +97,52 @@ enum PuzzleGeneratorCore {
 
     // MARK: - Sequence Design
 
-    static func designOverlappingSequences(
-        count _: Int,
+    /// Design sequences of variable lengths sharing overlapping codes in a merged path
+    static func designVariableSequences(
+        lengths: [Int],
         overlapSize: Int,
-        sequenceLength: Int,
         codes: [String]
     ) -> (sequences: [[String]], merged: [String]) {
-        let seq1 = (0..<sequenceLength).map { _ in codes.randomElement()! }
-        let overlap = Array(seq1.suffix(overlapSize))
-        let seq2 = overlap + (0..<(sequenceLength - overlapSize)).map { _ in codes.randomElement()! }
-        let merged = seq1 + Array(seq2.dropFirst(overlapSize))
+        guard !lengths.isEmpty else { return ([], []) }
 
-        return ([seq1, seq2], merged)
-    }
-
-    static func designChainedSequences(
-        count: Int,
-        sequenceLength: Int,
-        codes: [String]
-    ) -> (sequences: [[String]], merged: [String]) {
-        var allCodes: [String] = []
-        for _ in 0..<(sequenceLength - 1 + count) {
-            allCodes.append(codes.randomElement()!)
+        if lengths.count == 1 {
+            let seq = (0..<lengths[0]).map { _ in codes.randomElement()! }
+            return ([seq], seq)
         }
+
+        let mergedLength = lengths.reduce(0, +) - overlapSize * (lengths.count - 1)
+        let mergedCodes = (0..<mergedLength).map { _ in codes.randomElement()! }
 
         var sequences: [[String]] = []
-        for i in 0..<count {
-            let seq = Array(allCodes[i..<(i + sequenceLength)])
-            sequences.append(seq)
+        var start = 0
+        for length in lengths {
+            sequences.append(Array(mergedCodes[start..<(start + length)]))
+            start += length - overlapSize
         }
 
-        return (sequences, allCodes)
+        return (sequences, mergedCodes)
+    }
+
+    /// Generate random sequence lengths that sum to the correct total for a given merged path
+    static func randomLengths(
+        mergedLength: Int,
+        count: Int,
+        overlapSize: Int,
+        maxLength: Int = 4
+    ) -> [Int] {
+        let total = mergedLength + overlapSize * (count - 1)
+        let minLength = 3
+        var lengths = Array(repeating: minLength, count: count)
+        var remaining = total - count * minLength
+
+        while remaining > 0 {
+            let growable = (0..<count).filter { lengths[$0] < maxLength }
+            guard let index = growable.randomElement() else { break }
+            lengths[index] += 1
+            remaining -= 1
+        }
+
+        return lengths.shuffled()
     }
 
     // MARK: - Validation

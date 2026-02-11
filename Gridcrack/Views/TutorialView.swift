@@ -15,14 +15,14 @@ struct TutorialView: View {
     // swiftlint:disable line_length
     private let steps: [TutorialStep] = [
         TutorialStep(
-            title: "WELCOME, NETRUNNER",
-            description: "Breach Protocol is a hacking minigame. Your goal is to complete sequences by selecting codes from the matrix.",
+            title: "WELCOME",
+            description: "Gridcrack is a code-cracking puzzle. Your goal is to complete sequences by selecting codes from the grid.",
             icon: "terminal",
             highlightColor: BreachColors.accent
         ),
         TutorialStep(
-            title: "THE MATRIX",
-            description: "The matrix contains hex codes. You must select codes in a specific pattern to breach the system.",
+            title: "THE GRID",
+            description: "The grid contains hex codes. You must select codes in a specific pattern to crack the code.",
             icon: "square.grid.3x3",
             highlightColor: BreachColors.accent
         ),
@@ -51,8 +51,8 @@ struct TutorialView: View {
             highlightColor: BreachColors.accentHighlight
         ),
         TutorialStep(
-            title: "READY TO BREACH",
-            description: "Highlighted cells show valid moves. Gold borders indicate codes that advance a sequence. Good luck, netrunner!",
+            title: "START CRACKING",
+            description: "Highlighted cells show valid moves. Gold borders indicate codes that advance a sequence. Good luck!",
             icon: "bolt.fill",
             highlightColor: BreachColors.success
         )

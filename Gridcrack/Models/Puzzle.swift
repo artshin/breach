@@ -39,15 +39,6 @@ enum Difficulty: String, CaseIterable, Identifiable {
         }
     }
 
-    var sequenceLengths: [Int] {
-        switch self {
-        case .easy: [3]
-        case .medium: [3, 3]
-        case .hard: [3, 3]
-        case .expert: [3, 3, 3]
-        }
-    }
-
     var requiresOverlap: Bool {
         switch self {
         case .easy: false

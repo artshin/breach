@@ -51,7 +51,7 @@ struct GameView: View {
         .onAppear { syncBackground() }
         .onChange(of: viewModel.buffer.count) { _ in syncBackground() }
         .onChange(of: viewModel.gameResult) { _ in syncBackground() }
-        .alert("ABORT BREACH", isPresented: $showAbortConfirmation) {
+        .alert("ABORT", isPresented: $showAbortConfirmation) {
             Button("ABORT", role: .destructive) {
                 transitionManager.transition { dismiss() }
             }
@@ -139,7 +139,7 @@ struct GameView: View {
 
             // Title
             VStack(spacing: 2) {
-                Text("BREACH PROTOCOL")
+                Text("GRIDCRACK")
                     .font(BreachTypography.heading(16))
                     .foregroundColor(BreachColors.accent)
 

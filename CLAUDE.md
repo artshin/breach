@@ -17,7 +17,7 @@ make quality         # Run lint + format-check together
 make clean           # Clean build artifacts
 ```
 
-**After adding or removing Swift files, always run `make generate` before building.** The project uses xcodegen (`project.yml`) to generate `Breach.xcodeproj`.
+**After adding or removing Swift files, always run `make generate` before building.** The project uses xcodegen (`project.yml`) to generate `Gridcrack.xcodeproj`.
 
 ## Project Configuration
 
