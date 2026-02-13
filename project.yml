@@ -7,8 +7,7 @@ options:
 
 packages:
   AppLogService:
-    url: git@github.com:artshin/app-log-service.git
-    branch: main
+    path: ../app-log-service
 
 targets:
   Gridcrack:
