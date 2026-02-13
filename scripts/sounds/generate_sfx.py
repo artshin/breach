@@ -199,13 +199,14 @@ SOUND_SPECS: list[SoundSpec] = [
     SoundSpec(
         name="ambient_game",
         prompt=(
-            "cyberpunk electronic ambient soundtrack, pulsing synth layers with tension, "
-            "digital heartbeat rhythm, futuristic hacking sequence background, "
-            "urgent but controlled atmosphere, glitchy data processing textures, "
-            "dynamic evolving electronic soundscape, focused intensity"
+            "dark synthwave ambient music, slow deep bass pulse, "
+            "warm analog synth pads with subtle movement, "
+            "cinematic electronic underscore, minor key, "
+            "smooth dark atmosphere, soft filtered arpeggios, "
+            "clean production, professional game soundtrack"
         ),
         duration=47.0,
-        negative_extra="vocals, singing, speech, acoustic instruments, calm, peaceful, relaxing",
+        negative_extra="vocals, singing, speech, acoustic instruments, harsh, metallic, noise, distortion, glitch, white noise, high pitched, aggressive, loud",
         loop=True,
     ),
 ]

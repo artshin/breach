@@ -2,10 +2,10 @@
   {
     "name": "ambient_game",
     "file": "ambient_game.wav",
-    "prompt": "cyberpunk electronic ambient soundtrack, pulsing synth layers with tension, digital heartbeat rhythm, futuristic hacking sequence background, urgent but controlled atmosphere, glitchy data processing textures, dynamic evolving electronic soundscape, focused intensity",
-    "negative_prompt": "music, song, melody, vocals, singing, speech, voice, talking, low quality, distorted, noisy, hum, hiss, crackling, clipping, vocals, singing, speech, acoustic instruments, calm, peaceful, relaxing",
+    "prompt": "dark synthwave ambient music, slow deep bass pulse, warm analog synth pads with subtle movement, cinematic electronic underscore, minor key, smooth dark atmosphere, soft filtered arpeggios, clean production, professional game soundtrack",
+    "negative_prompt": "music, song, melody, vocals, singing, speech, voice, talking, low quality, distorted, noisy, hum, hiss, crackling, clipping, vocals, singing, speech, acoustic instruments, harsh, metallic, noise, distortion, glitch, white noise, high pitched, aggressive, loud",
     "duration": 47.0,
-    "seed": 2027,
+    "seed": 3042,
     "steps": 100
   }
 ]
