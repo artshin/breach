@@ -5,12 +5,19 @@ options:
     iOS: "26.0"
   xcodeVersion: "26.0"
 
+packages:
+  AppLogService:
+    url: git@github.com:artshin/app-log-service.git
+    branch: main
+
 targets:
   Gridcrack:
     type: application
     platform: iOS
     sources:
       - Gridcrack
+    dependencies:
+      - package: AppLogService
     settings:
       PRODUCT_BUNDLE_IDENTIFIER: com.artshin.gridcrack
       INFOPLIST_FILE: Gridcrack/Info.plist

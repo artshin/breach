@@ -1,9 +1,9 @@
 [
   {
-    "name": "ambient_loop",
-    "file": "ambient_loop.wav",
-    "prompt": "dark cyberpunk ambient drone, low digital hum with subtle data streams, atmospheric electronic background, futuristic server room ambience, moody sci-fi atmosphere with soft glitch textures, slow evolving pad, seamless continuous texture",
-    "negative_prompt": "music, song, melody, vocals, singing, speech, voice, talking, low quality, distorted, noisy, hum, hiss, crackling, clipping, loud, aggressive, drums, beat, rhythm, percussion, sudden changes",
+    "name": "ambient_game",
+    "file": "ambient_game.wav",
+    "prompt": "cyberpunk electronic ambient soundtrack, pulsing synth layers with tension, digital heartbeat rhythm, futuristic hacking sequence background, urgent but controlled atmosphere, glitchy data processing textures, dynamic evolving electronic soundscape, focused intensity",
+    "negative_prompt": "music, song, melody, vocals, singing, speech, voice, talking, low quality, distorted, noisy, hum, hiss, crackling, clipping, vocals, singing, speech, acoustic instruments, calm, peaceful, relaxing",
     "duration": 47.0,
     "seed": 2027,
     "steps": 100

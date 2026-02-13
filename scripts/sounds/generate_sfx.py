@@ -185,7 +185,7 @@ SOUND_SPECS: list[SoundSpec] = [
         duration=0.6,
     ),
     SoundSpec(
-        name="ambient_loop",
+        name="ambient_menu",
         prompt=(
             "dark cyberpunk ambient drone, low digital hum with subtle data streams, "
             "atmospheric electronic background, futuristic server room ambience, "
@@ -194,6 +194,18 @@ SOUND_SPECS: list[SoundSpec] = [
         ),
         duration=47.0,
         negative_extra="loud, aggressive, drums, beat, rhythm, percussion, sudden changes",
+        loop=True,
+    ),
+    SoundSpec(
+        name="ambient_game",
+        prompt=(
+            "cyberpunk electronic ambient soundtrack, pulsing synth layers with tension, "
+            "digital heartbeat rhythm, futuristic hacking sequence background, "
+            "urgent but controlled atmosphere, glitchy data processing textures, "
+            "dynamic evolving electronic soundscape, focused intensity"
+        ),
+        duration=47.0,
+        negative_extra="vocals, singing, speech, acoustic instruments, calm, peaceful, relaxing",
         loop=True,
     ),
 ]
