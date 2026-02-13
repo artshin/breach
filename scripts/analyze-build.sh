@@ -8,8 +8,8 @@ set -e
 
 # Configuration
 PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-PROJECT="Breach.xcodeproj"
-SCHEME="Breach"
+PROJECT="Gridcrack.xcodeproj"
+SCHEME="Gridcrack"
 CONFIGURATION="Release"
 OUTPUT_DIR="$PROJECT_DIR/release-build-analysis"
 DERIVED_DATA="$OUTPUT_DIR/DerivedData"
@@ -44,7 +44,8 @@ log_info "Starting build performance analysis..."
 log_info "Output directory: $OUTPUT_DIR"
 
 # Unlock keychain
-security unlock-keychain ~/Library/Keychains/login.keychain-db 2>/dev/null || true
+if [ -f "$PROJECT_DIR/.env" ]; then . "$PROJECT_DIR/.env"; fi
+security unlock-keychain -p "$KEYCHAIN_PASSWORD" ~/Library/Keychains/login.keychain-db 2>/dev/null || true
 
 # Record start time
 START_TIME=$(date +%s)

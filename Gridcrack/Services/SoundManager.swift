@@ -1,12 +1,13 @@
 import AVFoundation
 import SwiftUI
 
-/// Manages all game sound effects
+/// Manages all game sound effects and ambient audio
 @MainActor
 class SoundManager: ObservableObject {
     static let shared = SoundManager()
 
     private var audioPlayers: [SoundEffect: AVAudioPlayer] = [:]
+    private var ambientPlayer: AVAudioPlayer?
     private var settings: GameSettings {
         GameSettings.shared
     }
@@ -19,11 +20,19 @@ class SoundManager: ObservableObject {
         case gameWin = "game_win"
         case gameLose = "game_lose"
         case buttonTap = "button_tap"
+        case bonusAwarded = "bonus_awarded"
+        case difficultySelect = "difficulty_select"
+        case gridRushNewGrid = "grid_rush_new_grid"
+        case timerTick = "timer_tick"
+        case timerWarning = "timer_warning"
+        case toggleSwitch = "toggle_switch"
+        case transitionWhoosh = "transition_whoosh"
     }
 
     private init() {
         setupAudioSession()
         preloadSounds()
+        prepareAmbientLoop()
     }
 
     // MARK: - Setup
@@ -38,8 +47,57 @@ class SoundManager: ObservableObject {
     }
 
     private func preloadSounds() {
-        // Sounds will be loaded from bundle when assets are added
-        // For now, we'll use system sounds as fallback
+        for effect in SoundEffect.allCases {
+            guard let url = Bundle.main.url(
+                forResource: effect.rawValue,
+                withExtension: "wav"
+            ) else {
+                continue
+            }
+            do {
+                let player = try AVAudioPlayer(contentsOf: url)
+                player.prepareToPlay()
+                audioPlayers[effect] = player
+            } catch {
+                print("Failed to load sound \(effect.rawValue): \(error)")
+            }
+        }
+    }
+
+    // MARK: - Ambient Loop
+
+    private func prepareAmbientLoop() {
+        guard let url = Bundle.main.url(
+            forResource: "ambient_loop",
+            withExtension: "wav"
+        ) else { return }
+        do {
+            ambientPlayer = try AVAudioPlayer(contentsOf: url)
+            ambientPlayer?.numberOfLoops = -1
+            ambientPlayer?.volume = 0.3
+            ambientPlayer?.prepareToPlay()
+        } catch {
+            print("Failed to load ambient loop: \(error)")
+        }
+    }
+
+    func startAmbientLoop() {
+        guard settings.soundEnabled else { return }
+        guard ambientPlayer?.isPlaying != true else { return }
+        ambientPlayer?.play()
+    }
+
+    func stopAmbientLoop() {
+        ambientPlayer?.stop()
+        ambientPlayer?.currentTime = 0
+    }
+
+    func updateAmbientForSoundSetting() {
+        if settings.soundEnabled {
+            ambientPlayer?.play()
+        } else {
+            ambientPlayer?.pause()
+        }
     }
 
     // MARK: - Playback
@@ -47,47 +105,9 @@ class SoundManager: ObservableObject {
     func play(_ effect: SoundEffect) {
         guard settings.soundEnabled else { return }
 
-        // Try to play from preloaded sounds first
         if let player = audioPlayers[effect] {
             player.currentTime = 0
             player.play()
-            return
-        }
-
-        // Fallback to system sounds for now
-        playSystemSound(for: effect)
-    }
-
-    private func playSystemSound(for effect: SoundEffect) {
-        let soundID: SystemSoundID = switch effect {
-        case .cellSelect:
-            1104 // Tock
-        case .sequenceProgress:
-            1057 // Pop
-        case .sequenceComplete:
-            1025 // New mail
-        case .sequenceFailed:
-            1053 // Error
-        case .gameWin:
-            1025 // Fanfare
-        case .gameLose:
-            1053 // Sad
-        case .buttonTap:
-            1104 // Tock
-        }
-
-        AudioServicesPlaySystemSound(soundID)
-    }
-
-    // MARK: - Sound Loading
-
-    func loadSound(_ effect: SoundEffect, from url: URL) {
-        do {
-            let player = try AVAudioPlayer(contentsOf: url)
-            player.prepareToPlay()
-            audioPlayers[effect] = player
-        } catch {
-            print("Failed to load sound \(effect.rawValue): \(error)")
         }
     }
 
@@ -119,5 +139,33 @@ class SoundManager: ObservableObject {
 
     func playButtonTap() {
         play(.buttonTap)
+    }
+
+    func playBonusAwarded() {
+        play(.bonusAwarded)
+    }
+
+    func playDifficultySelect() {
+        play(.difficultySelect)
+    }
+
+    func playGridRushNewGrid() {
+        play(.gridRushNewGrid)
+    }
+
+    func playTimerTick() {
+        play(.timerTick)
+    }
+
+    func playTimerWarning() {
+        play(.timerWarning)
+    }
+
+    func playToggleSwitch() {
+        play(.toggleSwitch)
+    }
+
+    func playTransitionWhoosh() {
+        play(.transitionWhoosh)
     }
 }

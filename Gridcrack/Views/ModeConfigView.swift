@@ -172,6 +172,7 @@ struct ModeConfigView: View {
                     starsEarned: settings.stats(for: difficulty).totalStars
                 ) {
                     guard !isLocked else { return }
+                    SoundManager.shared.playDifficultySelect()
                     withAnimation(.easeInOut(duration: 0.2)) {
                         selectedDifficulty = difficulty
                     }

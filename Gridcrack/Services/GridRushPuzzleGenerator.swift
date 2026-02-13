@@ -1,15 +1,11 @@
 import Foundation
 
-/// Generates puzzles specifically for Grid Rush mode with special cell types
+/// Generates puzzles for Grid Rush mode with special cell types
 enum GridRushPuzzleGenerator {
-    /// Generate a puzzle for a specific Grid Rush stage
     static func generate(stage: GridRushStage) -> Puzzle {
-        var attempts = 0
         let maxAttempts = 100
 
-        while attempts < maxAttempts {
-            attempts += 1
-
+        for _ in 0..<maxAttempts {
             if let puzzle = tryGenerate(stage: stage) {
                 return puzzle
             }
@@ -24,121 +20,71 @@ enum GridRushPuzzleGenerator {
     }
 
     private static func tryGenerate(stage: GridRushStage) -> Puzzle? {
-        let gridSize = stage.gridSize
-
-        // Step 1: Design sequences with overlaps
-        let (sequences, mergedPath) = designSequences(stage: stage)
-
-        // Step 2: Generate solution path through grid
-        guard let (partialGrid, solutionPath) = PuzzleGeneratorCore.placeSolutionPath(
-            mergedPath: mergedPath,
-            gridSize: gridSize
-        ) else {
-            return nil
-        }
-
-        // Step 3: Fill remaining cells
-        var grid = PuzzleGeneratorCore.fillRemainingCells(
-            grid: partialGrid,
-            solutionPath: solutionPath,
-            mergedPath: mergedPath
+        // 1. Generate sequences from code pool
+        let codePool = Array(Cell.availableCodes.shuffled().prefix(stage.codePoolSize))
+        let sequences = PuzzleGeneratorCore.generateSequences(
+            count: stage.sequenceCount,
+            lengthRange: 3...3,
+            codePool: codePool
         )
 
-        // Step 4: Place blockers (avoiding solution path)
-        grid = placeBlockers(
-            grid: grid,
-            solutionPath: solutionPath,
-            count: Int.random(in: stage.blockerCount)
+        let fullPool = PuzzleGeneratorCore.selectCodePool(
+            size: stage.codePoolSize,
+            sequences: sequences
         )
 
-        // Step 5: Place wildcard cells (based on chance)
-        grid = placeWildcards(
-            grid: grid,
-            solutionPath: solutionPath,
-            chance: stage.wildcardChance
+        // 2. Fill grid randomly from pool
+        var grid = PuzzleGeneratorCore.fillGrid(
+            gridSize: stage.gridSize,
+            codePool: fullPool
         )
 
-        // Step 6: Place decay cells
-        grid = placeDecayCells(
-            grid: grid,
-            solutionPath: solutionPath,
-            count: stage.decayCellCount
-        )
+        // 3. Place special cells (blockers, wildcards, decay)
+        grid = placeBlockers(grid: grid, count: Int.random(in: stage.blockerCount))
+        grid = placeWildcards(grid: grid, chance: stage.wildcardChance)
+        grid = placeDecayCells(grid: grid, count: stage.decayCellCount)
 
-        // Step 7: Create target sequences
-        let targetSequences = sequences.map { codes in
-            TargetSequence(codes: codes)
-        }
-
+        // 4. Solve with special cells in place
         let bufferSize = GridRushConfig.bufferSize(for: stage)
-
-        let puzzle = Puzzle(
+        let result = PuzzleSolver.solve(
             grid: grid,
-            sequences: targetSequences,
+            sequences: sequences,
             bufferSize: bufferSize,
-            par: mergedPath.count,
+            maxSolutions: stage.maxSolutions + 1
+        )
+
+        // 5. Score quality
+        guard result.isSolvable else { return nil }
+        guard result.solutionCount <= stage.maxSolutions else { return nil }
+        guard result.falseStarts >= stage.minFalseStarts else { return nil }
+
+        // 6. Build puzzle
+        return Puzzle(
+            grid: grid,
+            sequences: sequences.map { TargetSequence(codes: $0) },
+            bufferSize: bufferSize,
+            par: result.par,
             difficulty: .medium,
-            solutionPath: solutionPath
-        )
-
-        // Step 8: Validate (with blocker checking)
-        if PuzzleGeneratorCore.validatePuzzle(puzzle, checkBlockers: true) {
-            return puzzle
-        }
-
-        return nil
-    }
-
-    // MARK: - Sequence Design
-
-    private static func designSequences(
-        stage: GridRushStage
-    ) -> (sequences: [[String]], merged: [String]) {
-        let codes = Cell.availableCodes
-        let count = stage.sequenceCount
-
-        if count == 1 {
-            let length = Int.random(in: 3...4)
-            let seq = (0..<length).map { _ in codes.randomElement()! }
-            return ([seq], seq)
-        }
-
-        let overlapSize = count >= 3 ? 2 : 1
-        let merged = Int.random(in: 5...6)
-        let lengths = PuzzleGeneratorCore.randomLengths(
-            mergedLength: merged, count: count, overlapSize: overlapSize
-        )
-        return PuzzleGeneratorCore.designVariableSequences(
-            lengths: lengths, overlapSize: overlapSize, codes: codes
+            solutionPath: result.solutions[0]
         )
     }
 
     // MARK: - Special Cell Placement
 
-    private static func placeBlockers(
-        grid: [[Cell]],
-        solutionPath: [Position],
-        count: Int
-    ) -> [[Cell]] {
+    private static func placeBlockers(grid: [[Cell]], count: Int) -> [[Cell]] {
         guard count > 0 else { return grid }
 
         var modifiedGrid = grid
-        let solutionPositions = Set(solutionPath)
-        var availablePositions: [Position] = []
+        var available: [Position] = []
 
         for row in 0..<grid.count {
             for col in 0..<grid[row].count {
-                let pos = Position(row: row, col: col)
-                if !solutionPositions.contains(pos) {
-                    availablePositions.append(pos)
-                }
+                available.append(Position(row: row, col: col))
             }
         }
 
-        availablePositions.shuffle()
-        let blockerPositions = Array(availablePositions.prefix(count))
-
-        for pos in blockerPositions {
+        available.shuffle()
+        for pos in available.prefix(count) {
             modifiedGrid[pos.row][pos.col] = Cell(
                 code: "XX",
                 row: pos.row,
@@ -152,27 +98,22 @@ enum GridRushPuzzleGenerator {
 
     private static func placeWildcards(
         grid: [[Cell]],
-        solutionPath: [Position],
         chance: Double
     ) -> [[Cell]] {
         guard chance > 0 else { return grid }
 
         var modifiedGrid = grid
-        let solutionPositions = Set(solutionPath)
 
         for row in 0..<grid.count {
             for col in 0..<grid[row].count {
-                let pos = Position(row: row, col: col)
-                if !modifiedGrid[row][col].isBlocked {
-                    if Double.random(in: 0...1) < chance, !solutionPositions.contains(pos) {
-                        let originalCode = modifiedGrid[row][col].code
-                        modifiedGrid[row][col] = Cell(
-                            code: originalCode,
-                            row: row,
-                            col: col,
-                            cellType: .wildcard
-                        )
-                    }
+                let cell = modifiedGrid[row][col]
+                if !cell.isBlocked, Double.random(in: 0...1) < chance {
+                    modifiedGrid[row][col] = Cell(
+                        code: cell.code,
+                        row: row,
+                        col: col,
+                        cellType: .wildcard
+                    )
                 }
             }
         }
@@ -180,35 +121,27 @@ enum GridRushPuzzleGenerator {
         return modifiedGrid
     }
 
-    private static func placeDecayCells(
-        grid: [[Cell]],
-        solutionPath: [Position],
-        count: Int
-    ) -> [[Cell]] {
+    private static func placeDecayCells(grid: [[Cell]], count: Int) -> [[Cell]] {
         guard count > 0 else { return grid }
 
         var modifiedGrid = grid
-        let solutionPositions = Set(solutionPath)
-        var availablePositions: [Position] = []
+        var available: [Position] = []
 
         for row in 0..<grid.count {
             for col in 0..<grid[row].count {
-                let pos = Position(row: row, col: col)
                 let cell = grid[row][col]
-                if !solutionPositions.contains(pos), !cell.isBlocked, !cell.isWildcard {
-                    availablePositions.append(pos)
+                if !cell.isBlocked, !cell.isWildcard {
+                    available.append(Position(row: row, col: col))
                 }
             }
         }
 
-        availablePositions.shuffle()
-        let decayPositions = Array(availablePositions.prefix(count))
-
-        for pos in decayPositions {
-            let originalCode = modifiedGrid[pos.row][pos.col].code
+        available.shuffle()
+        for pos in available.prefix(count) {
+            let code = modifiedGrid[pos.row][pos.col].code
             let movesUntilDecay = Int.random(in: 3...5)
             modifiedGrid[pos.row][pos.col] = Cell(
-                code: originalCode,
+                code: code,
                 row: pos.row,
                 col: pos.col,
                 cellType: .decay(movesRemaining: movesUntilDecay)

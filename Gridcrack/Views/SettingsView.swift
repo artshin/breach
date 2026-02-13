@@ -172,6 +172,9 @@ struct SettingsToggle: View {
             Toggle("", isOn: $isOn)
                 .labelsHidden()
                 .tint(BreachColors.accent)
+                .onChange(of: isOn) { _, _ in
+                    SoundManager.shared.playToggleSwitch()
+                }
         }
         .padding(.vertical, BreachSpacing.sm)
     }

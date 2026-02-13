@@ -17,7 +17,10 @@ struct ContentView: View {
         }
         .environment(backgroundState)
         .environment(transitionManager)
-        .onAppear { transitionManager.installTouchTracker() }
+        .onAppear {
+            transitionManager.installTouchTracker()
+            SoundManager.shared.startAmbientLoop()
+        }
     }
 }
 

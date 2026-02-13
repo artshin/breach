@@ -8,54 +8,74 @@ struct GridRushStage {
     let decayCellCount: Int
     let wildcardChance: Double
     let timeBonus: Int
+    let codePoolSize: Int
+    let maxSolutions: Int
+    let minFalseStarts: Int
 
     /// Get the stage configuration for a specific grid number
     static func forGridNumber(_ gridNumber: Int) -> Self {
         switch gridNumber {
-        case 1...2:
-            // Easy: 4x4, 2 sequences, no blockers
-            Self(
-                gridSize: 4,
-                sequenceCount: 2,
-                blockerCount: 0...0,
-                decayCellCount: 0,
-                wildcardChance: 0.0,
-                timeBonus: 15
-            )
-
-        case 3...4:
-            // Medium: 5x5, 2 sequences, 2-3 blockers
-            Self(
-                gridSize: 5,
-                sequenceCount: 2,
-                blockerCount: 2...3,
-                decayCellCount: 0,
-                wildcardChance: 0.0,
-                timeBonus: 12
-            )
-
-        case 5...6:
-            // Hard: 5x5, 3 sequences, 4-5 blockers, wildcards appear
-            Self(
-                gridSize: 5,
-                sequenceCount: 3,
-                blockerCount: 4...5,
-                decayCellCount: 0,
-                wildcardChance: 0.1,
-                timeBonus: 10
-            )
-
-        default:
-            // Expert (7+): 6x6, 3 sequences, 6+ blockers, decay cells
-            Self(
-                gridSize: 6,
-                sequenceCount: 3,
-                blockerCount: 6...8,
-                decayCellCount: 2,
-                wildcardChance: 0.15,
-                timeBonus: 8
-            )
+        case 1...2: easyStage
+        case 3...4: mediumStage
+        case 5...6: hardStage
+        default: expertStage
         }
+    }
+
+    private static var easyStage: Self {
+        Self(
+            gridSize: 4,
+            sequenceCount: 2,
+            blockerCount: 0...0,
+            decayCellCount: 0,
+            wildcardChance: 0.0,
+            timeBonus: 15,
+            codePoolSize: 6,
+            maxSolutions: 100,
+            minFalseStarts: 0
+        )
+    }
+
+    private static var mediumStage: Self {
+        Self(
+            gridSize: 5,
+            sequenceCount: 2,
+            blockerCount: 2...3,
+            decayCellCount: 0,
+            wildcardChance: 0.0,
+            timeBonus: 12,
+            codePoolSize: 5,
+            maxSolutions: 8,
+            minFalseStarts: 1
+        )
+    }
+
+    private static var hardStage: Self {
+        Self(
+            gridSize: 5,
+            sequenceCount: 3,
+            blockerCount: 4...5,
+            decayCellCount: 0,
+            wildcardChance: 0.1,
+            timeBonus: 10,
+            codePoolSize: Int.random(in: 4...5),
+            maxSolutions: 3,
+            minFalseStarts: 2
+        )
+    }
+
+    private static var expertStage: Self {
+        Self(
+            gridSize: 6,
+            sequenceCount: 3,
+            blockerCount: 6...8,
+            decayCellCount: 2,
+            wildcardChance: 0.15,
+            timeBonus: 8,
+            codePoolSize: 4,
+            maxSolutions: 2,
+            minFalseStarts: 3
+        )
     }
 }
 

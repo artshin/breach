@@ -19,7 +19,7 @@ BUILD_DIR := $(CURDIR)/build
 DERIVED_DATA := $(BUILD_DIR)/DerivedData
 
 # Default simulator
-SIMULATOR := iPhone 16 Pro
+SIMULATOR := iPhone 17 Pro
 
 .PHONY: all build release release-profile run device clean generate list-devices lint lint-fix format format-check quality screenshots generate-backgrounds help
 

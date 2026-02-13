@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 make generate        # Regenerate Xcode project from project.yml (run after adding/removing files)
 make build           # Build for simulator (Debug)
 make release         # Build for device (Release)
-make run             # Build and run on default simulator (iPhone 16 Pro)
+make run             # Build and run on default simulator (iPhone 17 Pro)
 make device DEVICE=Daedalus  # Build and install on named device
 make lint            # SwiftLint (report only)
 make lint-fix        # SwiftLint with autocorrect
@@ -21,7 +21,7 @@ make clean           # Clean build artifacts
 
 ## Project Configuration
 
-- **Platform:** iOS 16+ (deployment target in project.yml)
+- **Platform:** iOS 26+ (deployment target in project.yml)
 - **Swift:** 5.9
 - **No external dependencies** — pure SwiftUI + UIKit bridging
 - **No test suite** currently
@@ -32,9 +32,9 @@ SwiftLint limits: 120-char lines, 400-line files, 300-line types, 50-line functi
 
 ## Architecture
 
-### Pattern: ObservableObject / @Published (NOT @Observable)
+### Pattern: Mixed ObservableObject and @Observable
 
-iOS 16 target means `@Observable` (iOS 17+) cannot be used. All view models and services use `ObservableObject` with `@Published` properties, injected via `@StateObject`, `@ObservedObject`, or `@EnvironmentObject`.
+Core view models (`GameViewModel`, `GridRushViewModel`) and some services (`GameSettings`, `SoundManager`, `HapticsManager`) still use `ObservableObject` with `@Published`, injected via `@StateObject`/`@ObservedObject`. Newer services (`TransitionManager`, `BackgroundStateManager`, `ScreenshotRouter`) use `@Observable`. The `GamePlayable` protocol requires `ObservableObject` conformance.
 
 ### Game Modes
 
@@ -60,7 +60,7 @@ These are `@MainActor` enums with static methods (no instantiation) because they
 - `BackgroundStateManager` — controls which animated background renders
 - `TransitionManager` — hex dissolve transition state machine (`idle → covering → covered → revealing → idle`)
 
-Navigation uses `navigationDestination(isPresented:)` (not `item:` which requires iOS 17+). The `TransitionManager.transition(action:)` method wraps navigation state changes: it covers the screen with a hex dissolve, executes the navigation closure with UIKit animations disabled, then reveals. Custom swipe-back via `UIScreenEdgePanGestureRecognizer` triggers the same dissolve.
+Navigation uses `navigationDestination(isPresented:)`. The `TransitionManager.transition(action:)` method wraps navigation state changes: it covers the screen with a hex dissolve, executes the navigation closure with UIKit animations disabled, then reveals. Custom swipe-back via `UIScreenEdgePanGestureRecognizer` triggers the same dissolve.
 
 ### Theme System
 
@@ -72,7 +72,6 @@ Navigation uses `navigationDestination(isPresented:)` (not `item:` which require
 
 ## Known Pitfalls
 
-- `navigationDestination(item:)` requires iOS 17+ — use `isPresented:` variant
 - When splitting functions to meet the 50-line limit, watch for `multiline_arguments`, `multiline_parameters`, and `function_parameter_count` SwiftLint rules
 - Use a struct to group parameters when a function would exceed the 6-param limit
 - SwiftFormat's `wrapMultilineStatementBraces` is disabled because it conflicts with SwiftLint's `opening_brace`

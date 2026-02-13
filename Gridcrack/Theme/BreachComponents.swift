@@ -16,7 +16,10 @@ struct BreachButton: View {
     }
 
     var body: some View {
-        Button(action: action) {
+        Button {
+            SoundManager.shared.playButtonTap()
+            action()
+        } label: {
             VStack(spacing: 0) {
                 color.frame(height: 2)
                     .shadow(color: color.opacity(0.6), radius: 4, y: 2)

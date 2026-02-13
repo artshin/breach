@@ -103,6 +103,8 @@ class GridRushViewModel: ObservableObject, GamePlayable {
         if rushState.isGameOver {
             stopTimer()
             endGame()
+        } else if rushState.timeRemaining <= 10 {
+            sound.playTimerWarning()
         }
     }
 
@@ -119,6 +121,7 @@ class GridRushViewModel: ObservableObject, GamePlayable {
         let puzzle = GridRushPuzzleGenerator.generate(stage: stage)
         gameState = GameState(puzzle: puzzle)
         rushState.markGridStart()
+        sound.playGridRushNewGrid()
     }
 
     // MARK: - Cell Selection
@@ -255,7 +258,7 @@ class GridRushViewModel: ObservableObject, GamePlayable {
         rushState.applyGridClear(result: result, moves: state.moveCount)
         showBonusAnimation = result
 
-        sound.playGameWin()
+        sound.playBonusAwarded()
         haptics.gameWin()
 
         Task { [weak self] in

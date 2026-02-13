@@ -87,6 +87,7 @@ final class TransitionManager {
         cells = Self.generateCells(cols: gridCols, rows: gridRows, origin: origin)
 
         HapticsManager.shared.lightImpact()
+        SoundManager.shared.playTransitionWhoosh()
         beginPhase(.covering)
 
         schedulePhaseCascade(action: action)
