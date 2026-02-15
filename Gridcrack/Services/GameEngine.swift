@@ -1,4 +1,7 @@
+import AppLogService
 import Foundation
+
+private let log = Logger.shared
 
 /// Shared game mechanics used by both Standard and Grid Rush view models
 @MainActor
@@ -16,6 +19,10 @@ enum GameEngine {
             if let nextCode = sequence.nextNeededCode {
                 if isWildcard || nextCode == latestCode {
                     sequences[i].matchedCount += 1
+                    log.debug(
+                        "Sequence \(i) advanced \(sequences[i].matchedCount)/\(sequence.codes.count)",
+                        tags: ["engine"]
+                    )
                 }
             }
         }
@@ -45,6 +52,7 @@ enum GameEngine {
 
             if !canComplete {
                 sequences[i].isImpossible = true
+                log.debug("Sequence \(i) now impossible", tags: ["engine"])
             }
         }
     }
@@ -59,6 +67,7 @@ enum GameEngine {
         haptics: HapticsManager
     ) {
         if newCompletedCount > previousCompletedCount {
+            log.debug("Sequence completed", tags: ["engine"])
             sound.playSequenceComplete()
             haptics.sequenceComplete()
         } else {

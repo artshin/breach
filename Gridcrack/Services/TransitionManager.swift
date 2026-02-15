@@ -76,7 +76,7 @@ final class TransitionManager {
         guard phase == .idle else { return }
 
         if UIAccessibility.isReduceMotionEnabled {
-            withAnimation(.easeInOut(duration: 0.15)) {
+                withAnimation(.easeInOut(duration: 0.15)) {
                 action()
             }
             return

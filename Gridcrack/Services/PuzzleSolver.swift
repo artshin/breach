@@ -1,4 +1,7 @@
+import AppLogService
 import Foundation
+
+private let log = Logger.shared
 
 /// Result of solving a puzzle grid
 struct SolveResult {
@@ -79,7 +82,9 @@ enum PuzzleSolver {
 
         // Sort by length (shortest = best par)
         let sorted = allSolutions.sorted { $0.count < $1.count }
-        return SolveResult(solutions: sorted, falseStarts: falseStarts)
+        let result = SolveResult(solutions: sorted, falseStarts: falseStarts)
+        log.debug("Solver: \(result.solutionCount) solutions, par=\(result.par), fs=\(falseStarts)", tags: ["puzzle"])
+        return result
     }
 
     // MARK: - Recursive Search

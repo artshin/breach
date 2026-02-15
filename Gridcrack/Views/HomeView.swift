@@ -1,3 +1,4 @@
+import AppLogService
 import SwiftUI
 
 struct HomeView: View {
@@ -54,6 +55,7 @@ struct HomeView: View {
         }
         .clearNavigationBackground()
         .onAppear {
+            Logger.shared.info("Navigate to /home", tags: ["navigation"])
             backgroundState.state = .menu
         }
         .onChange(of: screenshotRouter.pendingRoute) { _, route in
@@ -252,22 +254,19 @@ struct HeroModeButton: View {
                 .padding(BreachSpacing.md)
             }
             .frame(maxWidth: .infinity)
-            .background(
-                ZStack {
-                    BreachColors.surfacePrimary.opacity(0.85)
-                    LinearGradient(
-                        colors: [color.opacity(0.12), color.opacity(0.03), .clear],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                }
-            )
+            .overlay {
+                LinearGradient(
+                    colors: [color.opacity(0.12), color.opacity(0.03), .clear],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            }
             .overlay(
                 Rectangle()
                     .stroke(color.opacity(0.2), lineWidth: 1)
             )
         }
-        .buttonStyle(.plain)
+        .pixelPressStyle(color: color, fillOpacity: 0.85, tintOpacity: 0)
     }
 }
 
@@ -290,13 +289,12 @@ struct SystemBarButton: View {
             .foregroundColor(color)
             .padding(.horizontal, BreachSpacing.md)
             .padding(.vertical, BreachSpacing.sm)
-            .background(color.opacity(0.06))
             .overlay(
                 Rectangle()
                     .stroke(color.opacity(0.15), lineWidth: 1)
             )
         }
-        .buttonStyle(.plain)
+        .pixelPressStyle(color: color, fillOpacity: 0.5, tintOpacity: 0.06)
     }
 }
 

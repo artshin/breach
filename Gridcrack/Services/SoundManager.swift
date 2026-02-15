@@ -1,3 +1,4 @@
+import AppLogService
 import AVFoundation
 import SwiftUI
 
@@ -5,11 +6,20 @@ import SwiftUI
 @MainActor
 class SoundManager: ObservableObject {
     static let shared = SoundManager()
+    private let log = Logger.shared
 
     private var audioPlayers: [SoundEffect: AVAudioPlayer] = [:]
-    private var ambientPlayer: AVAudioPlayer?
+    private var ambientPlayers: [AmbientTrack: AVAudioPlayer] = [:]
+    private var currentAmbientTrack: AmbientTrack?
+    private let ambientVolume: Float = 0.3
+    private let ambientFadeDuration: TimeInterval = 1.0
     private var settings: GameSettings {
         GameSettings.shared
+    }
+
+    enum AmbientTrack: String {
+        case menu = "ambient_menu"
+        case game = "ambient_game"
     }
 
     enum SoundEffect: String, CaseIterable {
@@ -32,7 +42,7 @@ class SoundManager: ObservableObject {
     private init() {
         setupAudioSession()
         preloadSounds()
-        prepareAmbientLoop()
+        prepareAmbientTracks()
     }
 
     // MARK: - Setup
@@ -41,12 +51,14 @@ class SoundManager: ObservableObject {
         do {
             try AVAudioSession.sharedInstance().setCategory(.ambient, mode: .default)
             try AVAudioSession.sharedInstance().setActive(true)
+            log.info("Audio session ready", tags: ["audio"])
         } catch {
-            print("Failed to setup audio session: \(error)")
+            log.error("Audio session setup failed", metadata: ["error": "\(error)"], tags: ["audio"])
         }
     }
 
     private func preloadSounds() {
+        var loaded = 0
         for effect in SoundEffect.allCases {
             guard let url = Bundle.main.url(
                 forResource: effect.rawValue,
@@ -58,45 +70,97 @@ class SoundManager: ObservableObject {
                 let player = try AVAudioPlayer(contentsOf: url)
                 player.prepareToPlay()
                 audioPlayers[effect] = player
+                loaded += 1
             } catch {
-                print("Failed to load sound \(effect.rawValue): \(error)")
+                log.error(
+                    "Failed to load sound",
+                    metadata: ["effect": effect.rawValue, "error": "\(error)"],
+                    tags: ["audio"]
+                )
             }
         }
+        log.info("Sounds preloaded \(loaded)/\(SoundEffect.allCases.count)", tags: ["audio"])
     }
 
-    // MARK: - Ambient Loop
+    // MARK: - Ambient Tracks
 
-    private func prepareAmbientLoop() {
-        guard let url = Bundle.main.url(
-            forResource: "ambient_loop",
-            withExtension: "wav"
-        ) else { return }
-        do {
-            ambientPlayer = try AVAudioPlayer(contentsOf: url)
-            ambientPlayer?.numberOfLoops = -1
-            ambientPlayer?.volume = 0.3
-            ambientPlayer?.prepareToPlay()
-        } catch {
-            print("Failed to load ambient loop: \(error)")
+    private func prepareAmbientTracks() {
+        for track in [AmbientTrack.menu, .game] {
+            guard let url = Bundle.main.url(
+                forResource: track.rawValue,
+                withExtension: "wav"
+            ) else {
+                log.warning("Ambient track \(track.rawValue) not found", tags: ["audio"])
+                continue
+            }
+            do {
+                let player = try AVAudioPlayer(contentsOf: url)
+                player.numberOfLoops = -1
+                player.volume = 0
+                player.prepareToPlay()
+                ambientPlayers[track] = player
+            } catch {
+                log.error(
+                    "Failed to load ambient track",
+                    metadata: ["track": track.rawValue, "error": "\(error)"],
+                    tags: ["audio"]
+                )
+            }
         }
+        log.info("Ambient tracks prepared: \(ambientPlayers.count)/2", tags: ["audio"])
     }
 
-    func startAmbientLoop() {
+    func switchAmbient(to track: AmbientTrack) {
         guard settings.soundEnabled else { return }
-        guard ambientPlayer?.isPlaying != true else { return }
-        ambientPlayer?.play()
+        guard track != currentAmbientTrack else { return }
+
+        // Fade out current track
+        if let current = currentAmbientTrack, let player = ambientPlayers[current] {
+            player.setVolume(0, fadeDuration: ambientFadeDuration)
+            let fadeDuration = ambientFadeDuration
+            Task { @MainActor in
+                try? await Task.sleep(for: .seconds(fadeDuration))
+                if currentAmbientTrack != current {
+                    player.stop()
+                }
+            }
+        }
+
+        // Start and fade in new track
+        if let player = ambientPlayers[track] {
+            player.volume = 0
+            player.play()
+            player.setVolume(ambientVolume, fadeDuration: ambientFadeDuration)
+        }
+
+        currentAmbientTrack = track
+        log.info("Ambient switched to \(track.rawValue)", tags: ["audio"])
     }
 
-    func stopAmbientLoop() {
-        ambientPlayer?.stop()
-        ambientPlayer?.currentTime = 0
+    func stopAmbient() {
+        guard let current = currentAmbientTrack,
+              let player = ambientPlayers[current]
+        else { return }
+        player.setVolume(0, fadeDuration: ambientFadeDuration)
+        let fadeDuration = ambientFadeDuration
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(fadeDuration))
+            player.stop()
+        }
+        currentAmbientTrack = nil
+        log.info("Ambient stopped", tags: ["audio"])
     }
 
     func updateAmbientForSoundSetting() {
         if settings.soundEnabled {
-            ambientPlayer?.play()
+            if let track = currentAmbientTrack, let player = ambientPlayers[track] {
+                player.volume = ambientVolume
+                player.play()
+            }
         } else {
-            ambientPlayer?.pause()
+            for player in ambientPlayers.values {
+                player.pause()
+            }
         }
     }
 

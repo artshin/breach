@@ -1,3 +1,4 @@
+import AppLogService
 import SwiftUI
 
 struct ContentView: View {
@@ -19,7 +20,16 @@ struct ContentView: View {
         .environment(transitionManager)
         .onAppear {
             transitionManager.installTouchTracker()
-            SoundManager.shared.startAmbientLoop()
+            SoundManager.shared.switchAmbient(to: .menu)
+            Logger.shared.info("App UI ready", tags: ["navigation"])
+        }
+        .onChange(of: backgroundState.state) { _, newState in
+            switch newState {
+            case .menu, .settings:
+                SoundManager.shared.switchAmbient(to: .menu)
+            case .game, .win, .loss:
+                SoundManager.shared.switchAmbient(to: .game)
+            }
         }
     }
 }

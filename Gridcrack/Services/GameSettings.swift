@@ -1,3 +1,4 @@
+import AppLogService
 import Foundation
 import SwiftUI
 
@@ -29,6 +30,7 @@ struct GridRushStats: Codable, Equatable {
 @MainActor
 class GameSettings: ObservableObject {
     static let shared = GameSettings()
+    private let log = Logger.shared
 
     // MARK: - Audio Settings
 
@@ -161,6 +163,19 @@ class GameSettings: ObservableObject {
 
         // Ensure easy is always unlocked
         unlockedDifficulties.insert(.easy)
+
+        let unlocked = unlockedDifficulties.map(\.rawValue).sorted().joined(separator: ",")
+        log.info(
+            "Settings loaded",
+            metadata: [
+                "sound": "\(soundEnabled)",
+                "haptics": "\(hapticsEnabled)",
+                "helpMode": "\(helpModeEnabled)",
+                "background": backgroundStyle.rawValue,
+                "unlocked": unlocked
+            ],
+            tags: ["settings"]
+        )
     }
 
     private func save() {
@@ -200,6 +215,7 @@ class GameSettings: ObservableObject {
 
         let next = all[currentIndex + 1]
         unlockedDifficulties.insert(next)
+        log.notice("Difficulty unlocked: \(next.rawValue)", tags: ["settings"])
         save()
     }
 
@@ -214,7 +230,10 @@ class GameSettings: ObservableObject {
     }
 
     func recordGameResult(difficulty: Difficulty, stars: Int) {
-        guard !helpModeEnabled else { return }
+        guard !helpModeEnabled else {
+            log.debug("Skipped recording — help mode", tags: ["settings"])
+            return
+        }
         var stats = difficultyStats[difficulty] ?? DifficultyStats()
 
         stats.gamesPlayed += 1
@@ -235,25 +254,54 @@ class GameSettings: ObservableObject {
         }
 
         difficultyStats[difficulty] = stats
+
+        log.info(
+            "Game result recorded",
+            metadata: [
+                "difficulty": difficulty.rawValue,
+                "stars": "\(stars)",
+                "played": "\(stats.gamesPlayed)",
+                "winRate": String(format: "%.0f%%", stats.winRate * 100),
+                "streak": "\(stats.currentStreak)"
+            ],
+            tags: ["settings"]
+        )
+
         save()
     }
 
     // MARK: - Grid Rush Statistics Methods
 
     func recordGridRushResult(gridsCompleted: Int, score: Int, perfectClears: Int) {
-        guard !helpModeEnabled else { return }
+        guard !helpModeEnabled else {
+            log.debug("Skipped recording — help mode", tags: ["settings"])
+            return
+        }
         gridRushStats.totalRuns += 1
         gridRushStats.totalGridsCleared += gridsCompleted
         gridRushStats.totalPerfectClears += perfectClears
 
         // Update bests
-        if gridsCompleted > gridRushStats.bestGridsCleared {
+        let newBestGrids = gridsCompleted > gridRushStats.bestGridsCleared
+        let newHighScore = score > gridRushStats.highScore
+
+        if newBestGrids {
             gridRushStats.bestGridsCleared = gridsCompleted
         }
-
-        if score > gridRushStats.highScore {
+        if newHighScore {
             gridRushStats.highScore = score
         }
+        log.info(
+            "Grid Rush result recorded",
+            metadata: [
+                "grids": "\(gridsCompleted)",
+                "score": "\(score)",
+                "perfects": "\(perfectClears)",
+                "newHighScore": "\(newHighScore)",
+                "newBestGrids": "\(newBestGrids)"
+            ],
+            tags: ["settings", "gridrush"]
+        )
 
         save()
     }
@@ -271,6 +319,7 @@ class GameSettings: ObservableObject {
     /// Loads appealing mock data for App Store screenshots.
     /// Called once at launch when `-SCREENSHOT_MODE` argument is present.
     func loadScreenshotData() {
+        log.info("Loading screenshot mode data", tags: ["settings"])
         isLoading = true
         defer {
             isLoading = false
@@ -323,6 +372,7 @@ class GameSettings: ObservableObject {
     // MARK: - Reset
 
     func resetProgress() {
+        log.warning("Progress reset", tags: ["settings"])
         unlockedDifficulties = [.easy]
         difficultyStats = [:]
         gridRushStats = GridRushStats()
@@ -330,6 +380,7 @@ class GameSettings: ObservableObject {
     }
 
     func resetAllSettings() {
+        log.warning("All settings reset", tags: ["settings"])
         soundEnabled = true
         hapticsEnabled = true
         helpModeEnabled = false

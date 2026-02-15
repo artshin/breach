@@ -21,7 +21,7 @@ DERIVED_DATA := $(BUILD_DIR)/DerivedData
 # Default simulator
 SIMULATOR := iPhone 17 Pro
 
-.PHONY: all build release release-profile run device clean generate list-devices lint lint-fix format format-check quality screenshots generate-backgrounds help
+.PHONY: all build release release-profile run device clean generate list-devices lint lint-fix format format-check quality screenshots generate-backgrounds test help
 
 all: help
 
@@ -135,6 +135,18 @@ list-simulators:
 	@echo "Available simulators:"
 	@xcrun simctl list devices available | grep -E "iPhone|iPad"
 
+# Run unit tests on simulator
+test:
+	@echo "Running tests..."
+	xcodebuild \
+		-project $(PROJECT) \
+		-scheme $(SCHEME) \
+		-configuration $(CONFIGURATION_DEBUG) \
+		-sdk iphonesimulator \
+		-derivedDataPath $(DERIVED_DATA) \
+		-destination 'platform=iOS Simulator,name=$(SIMULATOR)' \
+		test
+
 # ─── Code Quality ────────────────────────────────────────────────────────────
 
 # Lint with SwiftLint (report only, no changes)
@@ -215,6 +227,7 @@ help:
 	@echo "  make run                - Build and run on simulator"
 	@echo "  make device DEVICE=Name - Build and install on named device"
 	@echo "  make daedalus           - Build and install on Daedalus"
+	@echo "  make test               - Run unit tests on simulator"
 	@echo "  make clean              - Clean build artifacts"
 	@echo "  make generate           - Regenerate Xcode project (xcodegen)"
 	@echo "  make list-devices       - List available physical devices"

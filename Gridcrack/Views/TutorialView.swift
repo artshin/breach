@@ -1,3 +1,4 @@
+import AppLogService
 import SwiftUI
 
 struct TutorialStep {
@@ -74,6 +75,9 @@ struct TutorialView: View {
         .toolbar(.hidden, for: .navigationBar)
         .enableSwipeBack()
         .clearNavigationBackground()
+        .onAppear {
+            Logger.shared.info("Navigate to /tutorial", tags: ["navigation"])
+        }
     }
 
     // MARK: - Header

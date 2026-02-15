@@ -99,14 +99,10 @@ enum GridRushConfig {
     /// Buffer size for Grid Rush (scales with grid size)
     static func bufferSize(for stage: GridRushStage) -> Int {
         switch stage.gridSize {
-        case 4:
-            6
-        case 5:
-            7
-        case 6:
-            8
-        default:
-            7
+        case 4: 6
+        case 5: 7
+        case 6: 8
+        default: 7
         }
     }
 

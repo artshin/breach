@@ -1,8 +1,10 @@
+import AppLogService
 import Foundation
 import SwiftUI
 
 @MainActor
 class GameViewModel: ObservableObject, GamePlayable {
+    private let log = Logger.shared
     @Published var gameState: GameState
     @Published var selectedDifficulty: Difficulty = .easy
 
@@ -22,6 +24,18 @@ class GameViewModel: ObservableObject, GamePlayable {
         self.settings = settings
         selectedDifficulty = difficulty
         gameState = GameState(difficulty: difficulty)
+
+        log.info(
+            "Game created",
+            metadata: [
+                "difficulty": difficulty.rawValue,
+                "grid": "\(difficulty.gridSize)x\(difficulty.gridSize)",
+                "buffer": "\(gameState.bufferSize)",
+                "sequences": "\(gameState.sequences.count)",
+                "par": "\(gameState.par)"
+            ],
+            tags: ["game"]
+        )
     }
 
     var grid: [[Cell]] {
@@ -77,6 +91,8 @@ class GameViewModel: ObservableObject, GamePlayable {
 
         sound.playCellSelect()
         haptics.cellSelected()
+
+        log.debug("Cell (\(cell.row),\(cell.col)) \(cell.code)", tags: ["game"])
 
         let previousCompletedCount = gameState.sequences.filter(\.isComplete).count
         let previousMatchedCounts = gameState.sequences.map(\.matchedCount)
@@ -151,6 +167,7 @@ class GameViewModel: ObservableObject, GamePlayable {
             )
             gameState.gameResult = result
             settings.recordGameResult(difficulty: selectedDifficulty, stars: result.stars)
+            log.info("Game won \(result.stars)★ moves:\(gameState.moveCount) par:\(gameState.par)", tags: ["game"])
 
             Task { [sound, haptics] in
                 try? await Task.sleep(for: .milliseconds(300))
@@ -170,6 +187,7 @@ class GameViewModel: ObservableObject, GamePlayable {
             )
             gameState.gameResult = result
             settings.recordGameResult(difficulty: selectedDifficulty, stars: result.stars)
+            log.info("Game over \(result.stars)★ \(completed)/\(gameState.sequences.count) seq", tags: ["game"])
 
             Task { [sound, haptics] in
                 try? await Task.sleep(for: .milliseconds(300))
@@ -188,11 +206,13 @@ class GameViewModel: ObservableObject, GamePlayable {
 
     func newGame() {
         gameState = GameState(difficulty: selectedDifficulty)
+        log.info("New game", metadata: ["difficulty": selectedDifficulty.rawValue], tags: ["game"])
     }
 
     func newGame(difficulty: Difficulty) {
         selectedDifficulty = difficulty
         gameState = GameState(difficulty: difficulty)
+        log.info("New game", metadata: ["difficulty": difficulty.rawValue], tags: ["game"])
     }
 
     // MARK: - Highlighting

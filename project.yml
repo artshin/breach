@@ -24,3 +24,17 @@ targets:
       GENERATE_INFOPLIST_FILE: NO
       SWIFT_VERSION: "5.9"
       ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+    scheme:
+      testTargets:
+        - GridcrackTests
+
+  GridcrackTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - GridcrackTests
+    dependencies:
+      - target: Gridcrack
+    settings:
+      GENERATE_INFOPLIST_FILE: YES
+      SWIFT_VERSION: "5.9"

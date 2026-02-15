@@ -1,3 +1,4 @@
+import AppLogService
 import SwiftUI
 
 struct GridRushView: View {
@@ -78,6 +79,7 @@ struct GridRushView: View {
         .toolbar(.hidden, for: .navigationBar)
         .clearNavigationBackground()
         .onAppear {
+            Logger.shared.info("Navigate to /grid-rush", tags: ["navigation"])
             syncBackground()
             viewModel.startNewRun()
         }

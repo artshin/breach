@@ -1,9 +1,12 @@
+import AppLogService
 import Combine
 import Foundation
 import SwiftUI
 
 @MainActor
 class GridRushViewModel: ObservableObject, GamePlayable {
+    private let log = Logger.shared
+
     // MARK: - Published State
 
     @Published var rushState: GridRushState
@@ -102,6 +105,7 @@ class GridRushViewModel: ObservableObject, GamePlayable {
 
         if rushState.isGameOver {
             stopTimer()
+            log.info("Time up", tags: ["gridrush"])
             endGame()
         } else if rushState.timeRemaining <= 10 {
             sound.playTimerWarning()
@@ -114,6 +118,7 @@ class GridRushViewModel: ObservableObject, GamePlayable {
         rushState = GridRushState()
         loadNextGrid()
         startTimer()
+        log.info("Grid Rush run started", tags: ["gridrush"])
     }
 
     func loadNextGrid() {
@@ -122,6 +127,16 @@ class GridRushViewModel: ObservableObject, GamePlayable {
         gameState = GameState(puzzle: puzzle)
         rushState.markGridStart()
         sound.playGridRushNewGrid()
+        log.info(
+            "Grid loaded",
+            metadata: [
+                "grid": "\(rushState.currentGridNumber)",
+                "size": "\(stage.gridSize)x\(stage.gridSize)",
+                "sequences": "\(stage.sequenceCount)",
+                "timeLeft": "\(rushState.timeRemaining)s"
+            ],
+            tags: ["gridrush"]
+        )
     }
 
     // MARK: - Cell Selection
@@ -146,6 +161,8 @@ class GridRushViewModel: ObservableObject, GamePlayable {
 
         sound.playCellSelect()
         haptics.cellSelected()
+
+        log.debug("Cell (\(cell.row),\(cell.col)) \(cell.code) wc:\(cell.isWildcard)", tags: ["gridrush"])
 
         let previousCompletedCount = state.sequences.filter(\.isComplete).count
         let previousMatchedCounts = state.sequences.map(\.matchedCount)
@@ -258,6 +275,17 @@ class GridRushViewModel: ObservableObject, GamePlayable {
         rushState.applyGridClear(result: result, moves: state.moveCount)
         showBonusAnimation = result
 
+        log.info(
+            "Grid cleared",
+            metadata: [
+                "grid": "\(rushState.currentGridNumber - 1)",
+                "bonus": "+\(result.totalBonus)s",
+                "perfect": "\(result.isPerfect)",
+                "score": "\(rushState.totalScore)"
+            ],
+            tags: ["gridrush"]
+        )
+
         sound.playBonusAwarded()
         haptics.gameWin()
 
@@ -269,6 +297,8 @@ class GridRushViewModel: ObservableObject, GamePlayable {
     }
 
     private func handleGridFailed() {
+        log.debug("Grid failed — buffer full", metadata: ["grid": "\(rushState.currentGridNumber)"], tags: ["gridrush"])
+
         sound.playGameLose()
         haptics.gameLose()
 
@@ -290,6 +320,17 @@ class GridRushViewModel: ObservableObject, GamePlayable {
             gridsCompleted: rushState.gridsCompleted,
             score: rushState.totalScore,
             perfectClears: rushState.perfectClears
+        )
+
+        log.info(
+            "Grid Rush ended",
+            metadata: [
+                "grids": "\(rushState.gridsCompleted)",
+                "score": "\(rushState.totalScore)",
+                "perfects": "\(rushState.perfectClears)",
+                "bestStreak": "\(rushState.bestPerfectStreak)"
+            ],
+            tags: ["gridrush"]
         )
 
         sound.playGameLose()

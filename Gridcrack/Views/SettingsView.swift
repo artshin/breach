@@ -1,3 +1,4 @@
+import AppLogService
 import SwiftUI
 
 struct SettingsView: View {
@@ -30,6 +31,9 @@ struct SettingsView: View {
         .toolbar(.hidden, for: .navigationBar)
         .enableSwipeBack()
         .clearNavigationBackground()
+        .onAppear {
+            Logger.shared.info("Navigate to /settings", tags: ["navigation"])
+        }
         .navigationDestination(isPresented: $showTutorial) {
             TutorialView()
         }

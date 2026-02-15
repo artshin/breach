@@ -118,13 +118,13 @@ struct GameOverView: View {
                             .padding(.horizontal, BreachSpacing.xxl)
                             .padding(.vertical, BreachSpacing.md)
                             .frame(minWidth: 160)
-                            .breachGlass(tint: buttonColor)
                             .overlay(
                                 Rectangle()
                                     .stroke(buttonColor, lineWidth: 1)
                             )
                             .breachBevel(color: buttonColor)
                     }
+                    .pixelPressStyle(color: buttonColor)
 
                     if let onHome {
                         Button(action: onHome) {
@@ -134,6 +134,7 @@ struct GameOverView: View {
                                 .padding(.horizontal, BreachSpacing.lg)
                                 .padding(.vertical, BreachSpacing.sm)
                         }
+                        .pixelPressStyle(color: BreachColors.accent, fillOpacity: 0.5, tintOpacity: 0.04)
                     }
                 }
                 .padding(.top, BreachSpacing.lg)

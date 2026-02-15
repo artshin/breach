@@ -23,19 +23,19 @@ enum Difficulty: String, CaseIterable, Identifiable {
 
     var sequenceCount: Int {
         switch self {
-        case .easy: 1
-        case .medium: 2
-        case .hard: 2
-        case .expert: 3
+        case .easy: Int.random(in: 1...2)
+        case .medium: Int.random(in: 1...2)
+        case .hard: Int.random(in: 2...3)
+        case .expert: Int.random(in: 2...4)
         }
     }
 
-    var sequenceLengths: ClosedRange<Int> {
+    var sequenceCountRange: ClosedRange<Int> {
         switch self {
-        case .easy: 3...4
-        case .medium: 3...3
-        case .hard: 3...4
-        case .expert: 3...4
+        case .easy: 1...2
+        case .medium: 1...2
+        case .hard: 2...3
+        case .expert: 2...4
         }
     }
 
@@ -59,33 +59,20 @@ enum Difficulty: String, CaseIterable, Identifiable {
         }
     }
 
-    /// Estimated buffer size for display purposes (actual is par + bufferMargin)
+    /// Estimated buffer size for display purposes (actual is par + bufferMargin, capped at 8)
     var bufferSize: Int {
         switch self {
         case .easy: 7
         case .medium: 7
-        case .hard: 8
-        case .expert: 9
+        case .hard, .expert: 8
         }
     }
 
-    /// Accept puzzles with at most this many distinct solutions
-    var maxSolutions: Int {
+    /// Whether the solver quality gate runs (only expert with 4+ sequences)
+    var usesSolverQualityGate: Bool {
         switch self {
-        case .easy: 100
-        case .medium: 8
-        case .hard: 3
-        case .expert: 2
-        }
-    }
-
-    /// Require at least this many row-0 dead ends for confusion
-    var minFalseStarts: Int {
-        switch self {
-        case .easy: 0
-        case .medium: 1
-        case .hard: 2
-        case .expert: 3
+        case .easy, .medium, .hard: false
+        case .expert: true
         }
     }
 }

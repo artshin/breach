@@ -1,3 +1,4 @@
+import AppLogService
 import SwiftUI
 
 // MARK: - Game Mode
@@ -75,6 +76,8 @@ struct ModeConfigView: View {
         }
         .padding(.bottom, BreachSpacing.xl)
         .onAppear {
+            let route = mode == .standard ? "/config/standard" : "/config/grid-rush"
+            Logger.shared.info("Navigate to \(route)", tags: ["navigation"])
             backgroundState.state = .menu
         }
         .navigationBarBackButtonHidden(true)
@@ -348,7 +351,7 @@ struct DifficultyRow: View {
 
     private var specLabel: some View {
         HStack(spacing: BreachSpacing.xs) {
-            Text("\(difficulty.sequenceCount) SEQ")
+            Text("\(difficulty.sequenceCountRange.lowerBound)-\(difficulty.sequenceCountRange.upperBound) SEQ")
                 .font(BreachTypography.caption(9))
             Text("\u{2022}")
                 .font(BreachTypography.caption(9))

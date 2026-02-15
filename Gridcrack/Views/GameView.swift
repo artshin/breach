@@ -1,3 +1,4 @@
+import AppLogService
 import SwiftUI
 
 struct GameView: View {
@@ -48,7 +49,10 @@ struct GameView: View {
         .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .navigationBar)
         .clearNavigationBackground()
-        .onAppear { syncBackground() }
+        .onAppear {
+            Logger.shared.info("Navigate to /game/\(viewModel.selectedDifficulty.rawValue)", tags: ["navigation"])
+            syncBackground()
+        }
         .onChange(of: viewModel.buffer.count) { _ in syncBackground() }
         .onChange(of: viewModel.gameResult) { _ in syncBackground() }
         .alert("ABORT", isPresented: $showAbortConfirmation) {

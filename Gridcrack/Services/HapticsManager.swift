@@ -1,3 +1,4 @@
+import AppLogService
 import SwiftUI
 import UIKit
 
@@ -19,6 +20,7 @@ class HapticsManager: ObservableObject {
 
     private init() {
         prepareGenerators()
+        Logger.shared.info("Haptics manager initialized", tags: ["haptics"])
     }
 
     // MARK: - Preparation

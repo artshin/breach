@@ -7,8 +7,6 @@ struct BreachButton: View {
     let color: Color
     let action: () -> Void
 
-    @State private var glowPulse = false
-
     init(_ title: String, color: Color = BreachColors.accent, action: @escaping () -> Void) {
         self.title = title
         self.color = color
@@ -20,16 +18,26 @@ struct BreachButton: View {
             SoundManager.shared.playButtonTap()
             action()
         } label: {
-            VStack(spacing: 0) {
-                color.frame(height: 2)
-                    .shadow(color: color.opacity(0.6), radius: 4, y: 2)
-                buttonContent
-            }
-            .frame(minWidth: 180)
-            .background(buttonBackground)
-            .overlay(buttonBorder)
+            BreachButtonLabel(title: title, color: color)
         }
-        .buttonStyle(.plain)
+        .pixelPressStyle(color: color, tintOpacity: 0.15)
+    }
+}
+
+private struct BreachButtonLabel: View {
+    let title: String
+    let color: Color
+    @State private var glowPulse = false
+
+    var body: some View {
+        VStack(spacing: 0) {
+            color.frame(height: 2)
+                .shadow(color: color.opacity(0.6), radius: 4, y: 2)
+            buttonContent
+        }
+        .frame(minWidth: 180)
+        .overlay(buttonGradient)
+        .overlay(buttonBorder)
         .onAppear(perform: startGlowPulse)
     }
 
@@ -50,15 +58,12 @@ struct BreachButton: View {
         .padding(.vertical, BreachSpacing.md)
     }
 
-    private var buttonBackground: some View {
-        ZStack {
-            BreachColors.surfacePrimary.opacity(0.9)
-            LinearGradient(
-                colors: [color.opacity(0.15), color.opacity(0.04), .clear],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-        }
+    private var buttonGradient: some View {
+        LinearGradient(
+            colors: [color.opacity(0.15), color.opacity(0.04), .clear],
+            startPoint: .top,
+            endPoint: .bottom
+        )
     }
 
     private var buttonBorder: some View {
@@ -95,14 +100,12 @@ struct BreachOutlineButton: View {
                 .padding(.horizontal, BreachSpacing.xl)
                 .padding(.vertical, BreachSpacing.md)
                 .frame(minWidth: 140)
-                .background(BreachColors.surfacePrimary.opacity(0.6))
-                .background(color.opacity(0.04))
                 .overlay(Rectangle().stroke(color.opacity(0.2), lineWidth: 1))
                 .overlay(alignment: .leading) {
                     color.opacity(0.5).frame(width: 2)
                 }
         }
-        .buttonStyle(.plain)
+        .pixelPressStyle(color: color, fillOpacity: 0.6, tintOpacity: 0.04)
     }
 }
 
@@ -127,13 +130,13 @@ struct BreachIconButton: View {
                 .font(.system(size: size * 0.4))
                 .foregroundColor(color)
                 .frame(width: size, height: size)
-                .breachGlass(tint: color, opacity: 0.08)
                 .overlay(
                     Rectangle()
                         .stroke(color.opacity(0.3), lineWidth: 1)
                 )
                 .breachBevel(color: color, intensity: 0.6)
         }
+        .pixelPressStyle(color: color, fillOpacity: 0.6, tintOpacity: 0.08)
     }
 }
 

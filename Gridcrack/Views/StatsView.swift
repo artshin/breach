@@ -1,3 +1,4 @@
+import AppLogService
 import SwiftUI
 
 struct StatsView: View {
@@ -26,6 +27,9 @@ struct StatsView: View {
         .toolbar(.hidden, for: .navigationBar)
         .enableSwipeBack()
         .clearNavigationBackground()
+        .onAppear {
+            Logger.shared.info("Navigate to /stats", tags: ["navigation"])
+        }
     }
 
     // MARK: - Overall Stats
